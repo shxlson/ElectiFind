@@ -22,6 +22,30 @@ async function apiRequest(path, options = {}) {
   }
   return data;
 }
+
+function normalizeCourseForUi(course, extras = {}) {
+  if (!course) return null;
+  const totalSeats = Number(course.totalSeats ?? course.seats_total ?? 0);
+  const seatsLeft = Number(
+    extras.seats ??
+    course.seats ??
+    (totalSeats > 0 ? Math.max(totalSeats - Number(course.seats_filled || 0), 0) : 0)
+  );
+
+  return {
+    id: String(course.id ?? course.code ?? Math.random()),
+    name: course.name,
+    code: course.code,
+    credits: Number(course.credits ?? 0),
+    difficulty: course.difficulty || "Intermediate",
+    seats: seatsLeft,
+    totalSeats,
+    match: Number(extras.match ?? course.match ?? 80),
+    rating: Number(course.rating ?? 4.2),
+    instructor: course.instructor || course.professor || "Faculty Assigned",
+    prereq: course.prereq || ["Core Prerequisite"]
+  };
+}
 // ─── Global Styles ────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
@@ -730,12 +754,12 @@ const courses = [
   { id: 3, name: "Network Security and Cryptography", code: "21CSE358T", credits: 4, difficulty: "Advanced", seats: 8, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "Discrete Mathematics"] },
 ];
 
-const DashboardPage = ({ setPage, setActiveCourse }) => {
+const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false }) => {
   const stats = [
-    { label: "Recommended", value: "3", sub: "Electives", icon: "◈" },
-    { label: "Seats Remaining", value: "Avg 13.7", sub: "Across matches", icon: "⊡" },
-    { label: "Interest Match", value: "88%", sub: "Avg score", icon: "✦" },
-    { label: "Credits Taken", value: "18", sub: "This semester", icon: "⊞" },
+    { label: "Recommended", value: String(statsData?.recommended ?? coursesData.length), sub: "Electives", icon: "◈" },
+    { label: "Seats Remaining", value: `Avg ${statsData?.avgSeats ?? "13.7"}`, sub: "Across matches", icon: "⊡" },
+    { label: "Interest Match", value: String(statsData?.interestMatch ?? "88%"), sub: "Avg score", icon: "✦" },
+    { label: "Credits Taken", value: String(statsData?.creditsTaken ?? "18"), sub: "This semester", icon: "⊞" },
   ];
 
   return (
@@ -790,7 +814,8 @@ const DashboardPage = ({ setPage, setActiveCourse }) => {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {courses.map((c, idx) => (
+            {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading recommendations...</div>}
+            {!loading && coursesData.map((c, idx) => (
               <CourseCard key={c.id} course={c} idx={idx} onView={() => { setActiveCourse(c); setPage("course-detail"); }} onCompare={() => setPage("compare")} />
             ))}
           </div>
@@ -967,8 +992,10 @@ const QuestionnairePage = ({ setPage }) => {
 
 // ─── Recommendations ──────────────────────────────────────────────────────────
 
-const RecommendationsPage = ({ setPage, setActiveCourse }) => (
-  <div>
+const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = courses, loading = false }) => {
+  const courseList = recommendationsData.length ? recommendationsData : courses;
+  return (
+    <div>
     <TopBar title="Your Recommendations" setPage={setPage} />
     <div style={{ padding: "36px 40px" }}>
       <div style={{ display: "flex", gap: 16, marginBottom: 28, alignItems: "center" }}>
@@ -985,7 +1012,8 @@ const RecommendationsPage = ({ setPage, setActiveCourse }) => (
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {courses.map((c, i) => (
+        {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading AI recommendations...</div>}
+        {!loading && courseList.map((c, i) => (
           <div key={c.id} className="card" style={{ padding: "28px 28px", position: "relative", overflow: "hidden" }}>
             {i === 0 && (
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #e8913a, #f5b97a)" }} />
@@ -1027,7 +1055,8 @@ const RecommendationsPage = ({ setPage, setActiveCourse }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // ─── Course Detail ────────────────────────────────────────────────────────────
 
@@ -1216,7 +1245,8 @@ const AIInsightPanel = ({ course }) => {
 
 // ─── Compare Page ─────────────────────────────────────────────────────────────
 
-const ComparePage = ({ setPage }) => {
+const ComparePage = ({ setPage, coursesData = courses, loading = false }) => {
+  const compareList = coursesData.length ? coursesData.slice(0, 3) : courses;
   const metrics = [
     { label: "Credits", key: "credits", format: v => v },
     { label: "Difficulty", key: "difficulty", format: v => v },
@@ -1230,7 +1260,7 @@ const ComparePage = ({ setPage }) => {
 
   const bestIdx = (metric, i) => {
     if (!metric.best) return false;
-    const vals = courses.map((c, ci) => metric.custom ? parseFloat(metric.custom[ci]) : c[metric.key]);
+    const vals = compareList.map((c, ci) => metric.custom ? parseFloat(metric.custom[ci]) : c[metric.key]);
     const best = metric.best === "max" ? Math.max(...vals) : Math.min(...vals);
     return vals[i] === best;
   };
@@ -1247,7 +1277,8 @@ const ComparePage = ({ setPage }) => {
         <div style={{ display: "grid", gridTemplateColumns: "180px repeat(3, 1fr)", gap: 0, minWidth: 800 }}>
           {/* Header row */}
           <div style={{ padding: "16px 20px" }} />
-          {courses.map(c => (
+          {loading && <div style={{ color: "var(--text-muted)", fontSize: 13, padding: "8px 0" }}>Loading comparison data...</div>}
+          {!loading && compareList.map(c => (
             <div key={c.id} className="card" style={{ padding: "22px", margin: "0 6px 6px", textAlign: "center", borderTop: "3px solid var(--teal)" }}>
               <MatchBadge pct={c.match} />
               <div style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, marginTop: 10, lineHeight: 1.3 }}>{c.name}</div>
@@ -1261,9 +1292,9 @@ const ComparePage = ({ setPage }) => {
               <div key={`label-${mi}`} style={{
                 padding: "14px 20px", background: mi % 2 === 0 ? "var(--surface)" : "transparent",
                 borderRadius: "8px 0 0 8px", fontSize: 13, color: "var(--text-muted)",
-                display: "flex", alignItems: "center", fontFamily: "var(--font-mono)", fontSize: 11
+                display: "flex", alignItems: "center", fontFamily: "var(--font-mono)"
               }}>{m.label.toUpperCase()}</div>,
-              ...courses.map((c, ci) => (
+              ...compareList.map((c, ci) => (
                 <div key={`val-${mi}-${ci}`} style={{
                   padding: "14px 20px", margin: "0 6px",
                   background: mi % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent",
@@ -1568,8 +1599,44 @@ export default function App() {
   const [page, setPage] = useState("landing");
   const [activeCourse, setActiveCourse] = useState(null);
   const [user, setUser] = useState(null);
+  const [dashboardCourses, setDashboardCourses] = useState(courses);
+  const [recommendationCourses, setRecommendationCourses] = useState(courses);
+  const [compareCourses, setCompareCourses] = useState(courses);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   const isDashboard = DASHBOARD_PAGES.includes(page);
+
+  const loadDashboardBundle = async () => {
+    if (!localStorage.getItem("electifind_token")) return;
+    setLoadingData(true);
+    try {
+      const [dashboard, recs, compare] = await Promise.all([
+        apiRequest("/api/dashboard"),
+        apiRequest("/api/recommendations"),
+        apiRequest("/api/compare")
+      ]);
+
+      const mappedDashboardCourses = (dashboard?.recommendations || [])
+        .map((c) => normalizeCourseForUi(c))
+        .filter(Boolean);
+      const mappedRecommendationCourses = (recs || [])
+        .map((r) => normalizeCourseForUi(r.course, { match: r.match_score, seats: r.seats_left }))
+        .filter(Boolean);
+      const mappedCompareCourses = (compare || [])
+        .map((c) => normalizeCourseForUi(c))
+        .filter(Boolean);
+
+      if (mappedDashboardCourses.length) setDashboardCourses(mappedDashboardCourses);
+      if (mappedRecommendationCourses.length) setRecommendationCourses(mappedRecommendationCourses);
+      if (mappedCompareCourses.length) setCompareCourses(mappedCompareCourses);
+      setDashboardStats(dashboard?.stats || null);
+    } catch {
+      // Keep fallback data when API calls fail.
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("electifind_token");
@@ -1580,11 +1647,19 @@ export default function App() {
         if (page === "landing" || page === "login") {
           setPage("dashboard");
         }
+        loadDashboardBundle();
       })
       .catch(() => {
         localStorage.removeItem("electifind_token");
       });
   }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem("electifind_token")) return;
+    if (["dashboard", "recommendations", "compare"].includes(page)) {
+      loadDashboardBundle();
+    }
+  }, [page]);
 
   const setPageGuarded = (nextPage) => {
     if (DASHBOARD_PAGES.includes(nextPage) && !localStorage.getItem("electifind_token")) {
@@ -1597,11 +1672,11 @@ export default function App() {
   const renderPage = () => {
     switch (page) {
       case "landing": return <LandingPage setPage={setPageGuarded} />;
-      case "login": return <AuthPage setPage={setPageGuarded} onAuthSuccess={setUser} />;
-      case "dashboard": return <DashboardPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} />;
+      case "login": return <AuthPage setPage={setPageGuarded} onAuthSuccess={(u) => { setUser(u); loadDashboardBundle(); }} />;
+      case "dashboard": return <DashboardPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} coursesData={dashboardCourses} statsData={dashboardStats} loading={loadingData} />;
       case "questionnaire": return <QuestionnairePage setPage={setPageGuarded} />;
-      case "recommendations": return <RecommendationsPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} />;
-      case "compare": return <ComparePage setPage={setPageGuarded} />;
+      case "recommendations": return <RecommendationsPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} recommendationsData={recommendationCourses} loading={loadingData} />;
+      case "compare": return <ComparePage setPage={setPageGuarded} coursesData={compareCourses} loading={loadingData} />;
       case "community": return <CommunityPage setPage={setPageGuarded} />;
       case "my-electives": return <MyElectivesPage setPage={setPageGuarded} />;
       case "profile": return <ProfilePage setPage={setPageGuarded} />;
@@ -1612,7 +1687,7 @@ export default function App() {
           <div style={{ padding: "36px 40px" }}>
             <div className="section-label" style={{ marginBottom: 8 }}>EXPLAINABLE AI</div>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, marginBottom: 28 }}>Why We Recommended This</h2>
-            <AIInsightPanel course={activeCourse || courses[0]} />
+            <AIInsightPanel course={activeCourse || recommendationCourses[0] || courses[0]} />
           </div>
         </div>
       );

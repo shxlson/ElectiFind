@@ -16,93 +16,43 @@ app.use(express.json());
 const PORT = Number(process.env.PORT || 4000);
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 const DB_PATH = path.resolve(process.cwd(), "backend/data/db.json");
+const DATASET_PATH = path.resolve(process.cwd(), "electives_dataset.json");
 
-const COURSES = [
-  {
-    id: "1",
-    code: "21CSE356T",
-    name: "Natural Language Processing",
-    credits: 4,
-    difficulty: "Intermediate",
-    professor: "Dr. Meena Iyer",
-    tags: ["ai", "nlp", "ml"],
-    seats_total: 40,
-    seats_filled: 26,
-    rating: 4.8,
-    weekly_hours: 9,
-    assessment_type: "3 Assignments + Final Exam"
-  },
-  {
-    id: "2",
-    code: "21CSE362T",
-    name: "Cloud Computing",
-    credits: 3,
-    difficulty: "Beginner",
-    professor: "Prof. Suresh R.",
-    tags: ["cloud", "systems", "devops"],
-    seats_total: 35,
-    seats_filled: 15,
-    rating: 4.5,
-    weekly_hours: 7,
-    assessment_type: "Lab + Mini Project"
-  },
-  {
-    id: "3",
-    code: "21CSE358T",
-    name: "Network Security and Cryptography",
-    credits: 4,
-    difficulty: "Advanced",
-    professor: "Dr. Vikram N.",
-    tags: ["security", "networks", "crypto"],
-    seats_total: 30,
-    seats_filled: 22,
+function normalizeCourse(raw) {
+  const totalSeats = Number(raw.intake_limit || 0);
+  const filledSeats = Number(raw.current_enrollment || 0);
+  const totalHours = Number(raw.total_hours || 0);
+  const creditC = Number(raw?.credits?.C || 0);
+  const tags = Array.isArray(raw.domain_tags)
+    ? raw.domain_tags.map((t) => String(t).toLowerCase())
+    : [];
+  const units = Array.isArray(raw.units) ? raw.units : [];
+
+  return {
+    id: String(raw.course_code),
+    code: String(raw.course_code),
+    name: String(raw.course_name),
+    credits: creditC,
+    difficulty: raw.difficulty || "Intermediate",
+    professor: "Faculty Assigned by Department",
+    tags,
+    seats_total: totalSeats,
+    seats_filled: filledSeats,
     rating: 4.2,
-    weekly_hours: 10,
-    assessment_type: "2 Assignments + Final Exam"
-  },
-  {
-    id: "4",
-    code: "21CSE355T",
-    name: "Data Mining and Analytics",
-    credits: 4,
-    difficulty: "Intermediate",
-    professor: "Dr. Priya Nair",
-    tags: ["data", "analytics", "ml"],
-    seats_total: 40,
-    seats_filled: 27,
-    rating: 4.6,
-    weekly_hours: 8,
-    assessment_type: "Assignments + Project"
-  },
-  {
-    id: "5",
-    code: "21CSE454T",
-    name: "Computer Vision",
-    credits: 3,
-    difficulty: "Advanced",
-    professor: "Dr. Kavya I.",
-    tags: ["vision", "ai", "ml"],
-    seats_total: 35,
-    seats_filled: 28,
-    rating: 4.4,
-    weekly_hours: 9,
-    assessment_type: "Project + Viva"
-  },
-  {
-    id: "6",
-    code: "21CSE354T",
-    name: "Full Stack Web Development",
-    credits: 3,
-    difficulty: "Beginner",
-    professor: "Prof. Karthik R.",
-    tags: ["web", "frontend", "backend"],
-    seats_total: 45,
-    seats_filled: 21,
-    rating: 4.7,
-    weekly_hours: 6,
-    assessment_type: "Continuous Lab Evaluation"
-  }
-];
+    weekly_hours: totalHours > 0 ? Math.round(totalHours / 5) : 8,
+    assessment_type: raw.course_type || "Theory",
+    departments: raw.departments || [],
+    topics: raw.topics || [],
+    units
+  };
+}
+
+function loadCourses() {
+  const raw = JSON.parse(fs.readFileSync(DATASET_PATH, "utf8"));
+  return raw.map(normalizeCourse);
+}
+
+const COURSES = loadCourses();
 
 function readDb() {
   const raw = fs.readFileSync(DB_PATH, "utf8");
