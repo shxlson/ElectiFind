@@ -263,11 +263,13 @@ const NAV_ITEMS = [
   { id: "profile", label: "Profile", icon: "◉" },
 ];
 
-const Sidebar = ({ activePage, setPage }) => (
+const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose }) => (
   <aside style={{
     width: 220, minHeight: "100vh", background: "var(--navy-80)",
     borderRight: "1px solid var(--border)", padding: "28px 0",
-    display: "flex", flexDirection: "column", position: "fixed", left: 0, top: 0, zIndex: 100
+    display: "flex", flexDirection: "column", position: "fixed", left: 0, top: 0, zIndex: 100,
+    transform: isMobile ? (isOpen ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
+    transition: "transform 0.25s ease"
   }}>
     <div style={{ padding: "0 24px 28px", borderBottom: "1px solid var(--border)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -286,7 +288,7 @@ const Sidebar = ({ activePage, setPage }) => (
 
     <nav style={{ flex: 1, padding: "20px 12px" }}>
       {NAV_ITEMS.map(item => (
-        <button key={item.id} onClick={() => setPage(item.id)} style={{
+        <button key={item.id} onClick={() => { setPage(item.id); if (isMobile && onClose) onClose(); }} style={{
           width: "100%", display: "flex", alignItems: "center", gap: 12,
           padding: "10px 14px", borderRadius: 14,
           background: activePage === item.id ? "var(--teal-dim)" : "transparent",
@@ -321,25 +323,97 @@ const Sidebar = ({ activePage, setPage }) => (
   </aside>
 );
 
-const TopBar = ({ title, setPage }) => (
+const TopBar = ({
+  title,
+  setPage,
+  searchValue = "",
+  onSearchChange,
+  onSearchSubmit,
+  searchResults = [],
+  searchLoading = false,
+  onSearchSelect,
+  showMenuButton = false,
+  onToggleMenu
+}) => (
   <div style={{
     height: 64, background: "rgba(17,16,9,0.88)", backdropFilter: "blur(20px)",
     borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center",
     justifyContent: "space-between", padding: "0 32px",
     position: "sticky", top: 0, zIndex: 50
   }}>
-    <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--text-primary)" }}>{title}</h2>
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {showMenuButton && (
+        <button
+          onClick={onToggleMenu}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            color: "var(--text-secondary)",
+            fontSize: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >☰</button>
+      )}
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--text-primary)" }}>{title}</h2>
+    </div>
     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 10,
         background: "var(--surface)", border: "1px solid var(--border)",
-        borderRadius: 14, padding: "8px 16px"
+        borderRadius: 14, padding: "8px 16px", position: "relative"
       }}>
         <span style={{ color: "var(--text-muted)", fontSize: 13 }}>⌕</span>
-        <input placeholder="Search courses..." style={{
+        <input
+          placeholder="Search courses..."
+          value={searchValue}
+          onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onSearchSubmit) {
+              onSearchSubmit(searchValue);
+            }
+          }}
+          style={{
           background: "none", border: "none", outline: "none",
           color: "var(--text-secondary)", fontSize: 13, width: 180
         }} />
+        {(searchLoading || searchResults.length > 0) && (
+          <div style={{
+            position: "absolute",
+            top: 42,
+            left: 0,
+            right: 0,
+            background: "#201a12",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            padding: "8px",
+            zIndex: 120
+          }}>
+            {searchLoading && <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "6px 8px" }}>Searching...</div>}
+            {!searchLoading && searchResults.slice(0, 6).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onSearchSelect && onSearchSelect(item)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  border: "1px solid transparent",
+                  borderRadius: 8,
+                  padding: "8px"
+                }}
+              >
+                <div style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{item.name}</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{item.code}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <button style={{
         width: 38, height: 38, borderRadius: 10,
@@ -755,7 +829,7 @@ const courses = [
   { id: 3, name: "Network Security and Cryptography", code: "21CSE358T", credits: 4, difficulty: "Advanced", seats: 8, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "Discrete Mathematics"] },
 ];
 
-const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false }) => {
+const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false, topBarProps = {}, onAddCompare }) => {
   const stats = [
     { label: "Recommended", value: String(statsData?.recommended ?? coursesData.length), sub: "Electives", icon: "◈" },
     { label: "Seats Remaining", value: `Avg ${statsData?.avgSeats ?? "13.7"}`, sub: "Across matches", icon: "⊡" },
@@ -765,7 +839,7 @@ const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsD
 
   return (
     <div>
-      <TopBar title="Dashboard" setPage={setPage} />
+      <TopBar title="Dashboard" setPage={setPage} {...topBarProps} />
       <div style={{ padding: "36px 40px" }}>
         {/* Welcome */}
         <div className="card fade-up" style={{ padding: "28px 32px", marginBottom: 28, background: "linear-gradient(135deg, #2a2318, #1f1a12)", position: "relative", overflow: "hidden" }}>
@@ -817,7 +891,7 @@ const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsD
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading recommendations...</div>}
             {!loading && coursesData.map((c, idx) => (
-              <CourseCard key={c.id} course={c} idx={idx} onView={() => { setActiveCourse(c); setPage("course-detail"); }} onCompare={() => setPage("compare")} />
+              <CourseCard key={c.id} course={c} idx={idx} onView={() => { setActiveCourse(c); setPage("course-detail"); }} onCompare={() => { onAddCompare && onAddCompare(c); setPage("compare"); }} />
             ))}
           </div>
         </div>
@@ -868,7 +942,7 @@ const questions = [
   { id: 5, type: "scenario", q: "You have 8 credits left this semester. What's your priority?", opts: ["Learn something deep and challenging", "Maintain GPA with manageable workload", "Explore an entirely new domain", "Build a portfolio-worthy project"] },
 ];
 
-const QuestionnairePage = ({ setPage }) => {
+const QuestionnairePage = ({ setPage, topBarProps = {} }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [sliderVal, setSliderVal] = useState(3);
@@ -885,7 +959,7 @@ const QuestionnairePage = ({ setPage }) => {
 
   if (done) return (
     <div>
-      <TopBar title="Questionnaire" setPage={setPage} />
+      <TopBar title="Questionnaire" setPage={setPage} {...topBarProps} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", textAlign: "center", padding: 40 }}>
         <div style={{ width: 80, height: 80, borderRadius: "50%", background: "var(--teal-dim)", border: "1px solid var(--border-teal)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 24, animation: "float 3s ease-in-out infinite" }}>✦</div>
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 36, fontWeight: 700, marginBottom: 12 }}>Analysis Complete!</h2>
@@ -897,7 +971,7 @@ const QuestionnairePage = ({ setPage }) => {
 
   return (
     <div>
-      <TopBar title="Questionnaire" setPage={setPage} />
+      <TopBar title="Questionnaire" setPage={setPage} {...topBarProps} />
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "48px 40px" }}>
         {/* Progress */}
         <div style={{ marginBottom: 48 }}>
@@ -993,11 +1067,11 @@ const QuestionnairePage = ({ setPage }) => {
 
 // ─── Recommendations ──────────────────────────────────────────────────────────
 
-const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = courses, loading = false }) => {
+const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = courses, loading = false, topBarProps = {}, onAddCompare }) => {
   const courseList = recommendationsData.length ? recommendationsData : courses;
   return (
     <div>
-    <TopBar title="Your Recommendations" setPage={setPage} />
+    <TopBar title="Your Recommendations" setPage={setPage} {...topBarProps} />
     <div style={{ padding: "36px 40px" }}>
       <div style={{ display: "flex", gap: 16, marginBottom: 28, alignItems: "center" }}>
         <div style={{ flex: 1 }}>
@@ -1047,7 +1121,7 @@ const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = c
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 160 }}>
                 <button className="btn-primary" onClick={() => { setActiveCourse(c); setPage("course-detail"); }} style={{ fontSize: 13 }}>View Details</button>
-                <button className="btn-ghost" onClick={() => setPage("compare")} style={{ fontSize: 13 }}>+ Compare</button>
+                <button className="btn-ghost" onClick={() => { onAddCompare && onAddCompare(c); setPage("compare"); }} style={{ fontSize: 13 }}>+ Compare</button>
                 <button className="btn-ghost" onClick={() => setPage("ai-insight")} style={{ fontSize: 13, color: "var(--teal)", borderColor: "var(--border-teal)" }}>Why Recommended?</button>
               </div>
             </div>
@@ -1061,7 +1135,7 @@ const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = c
 
 // ─── Course Detail ────────────────────────────────────────────────────────────
 
-const CourseDetailPage = ({ course, setPage }) => {
+const CourseDetailPage = ({ course, setPage, topBarProps = {}, onAddCompare }) => {
   const [tab, setTab] = useState("overview");
   const c = course || courses[0];
   const seatPct = Math.round((c.seats / c.totalSeats) * 100);
@@ -1070,7 +1144,7 @@ const CourseDetailPage = ({ course, setPage }) => {
 
   return (
     <div>
-      <TopBar title="Course Detail" setPage={setPage} />
+      <TopBar title="Course Detail" setPage={setPage} {...topBarProps} />
       {/* Header */}
       <div style={{ background: "var(--navy-80)", borderBottom: "1px solid var(--border)", padding: "36px 40px", position: "relative", overflow: "hidden" }}>
         <FloatingOrb size="400px" x="80%" y="-50%" color="rgba(232,145,58,0.06)" delay="0s" />
@@ -1103,7 +1177,7 @@ const CourseDetailPage = ({ course, setPage }) => {
             </div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn-ghost" onClick={() => setPage("compare")} style={{ fontSize: 14 }}>Compare</button>
+            <button className="btn-ghost" onClick={() => { onAddCompare && onAddCompare(c); setPage("compare"); }} style={{ fontSize: 14 }}>Compare</button>
             <button className="btn-primary" style={{ fontSize: 14, padding: "12px 28px" }}>Enroll Now</button>
           </div>
         </div>
@@ -1246,7 +1320,7 @@ const AIInsightPanel = ({ course }) => {
 
 // ─── Compare Page ─────────────────────────────────────────────────────────────
 
-const ComparePage = ({ setPage, coursesData = courses, loading = false }) => {
+const ComparePage = ({ setPage, coursesData = courses, loading = false, topBarProps = {}, onRemoveCompare, onClearCompare }) => {
   const compareList = coursesData.length ? coursesData.slice(0, 3) : courses;
   const metrics = [
     { label: "Credits", key: "credits", format: v => v },
@@ -1268,11 +1342,23 @@ const ComparePage = ({ setPage, coursesData = courses, loading = false }) => {
 
   return (
     <div>
-      <TopBar title="Compare Courses" setPage={setPage} />
+      <TopBar title="Compare Courses" setPage={setPage} {...topBarProps} />
       <div style={{ padding: "36px 40px", overflowX: "auto" }}>
         <div style={{ marginBottom: 28 }}>
           <div className="section-label">SIDE BY SIDE</div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600 }}>Compare Your Top Matches</h2>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            {compareList.map((c) => (
+              <button key={c.id} className="tag teal" onClick={() => onRemoveCompare && onRemoveCompare(c)} style={{ cursor: "pointer" }}>
+                {c.code} ✕
+              </button>
+            ))}
+            {compareList.length > 0 && (
+              <button className="btn-ghost" style={{ fontSize: 11, padding: "4px 10px" }} onClick={() => onClearCompare && onClearCompare()}>
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "180px repeat(3, 1fr)", gap: 0, minWidth: 800 }}>
@@ -1323,12 +1409,12 @@ const threads = [
   { id: 3, author: "Kiran T.", course: "21CSE358T", time: "1d ago", title: "Security prereqs — how much cryptography depth is expected?", body: "The syllabus lists core cryptography topics. Is prior security coursework enough to handle it comfortably?", upvotes: 15, replies: 5, tags: ["prereq", "security"] },
 ];
 
-const CommunityPage = ({ setPage }) => {
+const CommunityPage = ({ setPage, topBarProps = {} }) => {
   const [showModal, setShowModal] = useState(false);
 
   return (
     <div>
-      <TopBar title="Community" setPage={setPage} />
+      <TopBar title="Community" setPage={setPage} {...topBarProps} />
       <div style={{ padding: "36px 40px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <div>
@@ -1481,7 +1567,7 @@ const ReviewsPanel = () => {
 
 // ─── My Electives Page ────────────────────────────────────────────────────────
 
-const MyElectivesPage = ({ setPage }) => {
+const MyElectivesPage = ({ setPage, topBarProps = {}, recommendationHistory = [] }) => {
   const electives = [
     { name: "Data Mining and Analytics", code: "21CSE355T", credits: 4, status: "Completed", grade: "A", rating: 4, semester: "Sem 5" },
     { name: "Computer Vision", code: "21CSE454T", credits: 3, status: "Ongoing", grade: "—", rating: null, semester: "Sem 6" },
@@ -1490,7 +1576,7 @@ const MyElectivesPage = ({ setPage }) => {
 
   return (
     <div>
-      <TopBar title="My Electives" setPage={setPage} />
+      <TopBar title="My Electives" setPage={setPage} {...topBarProps} />
       <div style={{ padding: "36px 40px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
           {[["10", "Credits Earned"], ["2", "Completed"], ["1", "Ongoing"]].map(([v, l]) => (
@@ -1534,9 +1620,13 @@ const MyElectivesPage = ({ setPage }) => {
         <div style={{ marginTop: 40 }}>
           <div className="section-label" style={{ marginBottom: 16 }}>RECOMMENDATION HISTORY</div>
           <div className="card" style={{ padding: "0" }}>
-            {[["Sep 2024", "AI matched you with 21CSE356T, 21CSE362T, 21CSE358T based on Questionnaire v3"], ["Mar 2024", "AI matched you with 21CSE355T, 21CSE454T, 21CSE362T based on Questionnaire v2"], ["Oct 2023", "Initial recommendations based on Questionnaire v1"]].map(([d, t], i) => (
-              <div key={d} style={{ display: "flex", gap: 20, padding: "18px 24px", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--teal)", minWidth: 70 }}>{d}</div>
+            {(recommendationHistory.length ? recommendationHistory.slice(0, 3).map((h) => {
+              const dateText = new Date(h.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+              const codes = (h.recommendations || []).map((r) => r.course?.code || r.course_id).filter(Boolean).slice(0, 3).join(", ");
+              return [dateText, `AI matched you with ${codes || "top recommendations"} based on questionnaire ${h.questionnaire_id || "latest"}`];
+            }) : [["No data", "Complete and submit a questionnaire to generate recommendation history."]]).map(([d, t], i, arr) => (
+              <div key={`${d}-${i}`} style={{ display: "flex", gap: 20, padding: "18px 24px", borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--teal)", minWidth: 90 }}>{d}</div>
                 <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t}</div>
               </div>
             ))}
@@ -1549,7 +1639,7 @@ const MyElectivesPage = ({ setPage }) => {
 
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
-const ProfilePage = ({ setPage, userData, onUserUpdate }) => {
+const ProfilePage = ({ setPage, userData, onUserUpdate, topBarProps = {} }) => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -1623,7 +1713,7 @@ const ProfilePage = ({ setPage, userData, onUserUpdate }) => {
 
   return (
     <div>
-      <TopBar title="Profile" setPage={setPage} />
+      <TopBar title="Profile" setPage={setPage} {...topBarProps} />
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 40px" }}>
         <div className="card" style={{ padding: "32px", marginBottom: 24, display: "flex", gap: 24, alignItems: "center" }}>
           <div style={{

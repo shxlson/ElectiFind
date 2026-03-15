@@ -17,6 +17,8 @@ const PORT = Number(process.env.PORT || 4000);
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 const DB_PATH = path.resolve(process.cwd(), "backend/data/db.json");
 const DATASET_PATH = path.resolve(process.cwd(), "electives_dataset.json");
+const MLFLOW_TRACKING_URI = process.env.MLFLOW_TRACKING_URI || "";
+const MLFLOW_EXPERIMENT_ID = process.env.MLFLOW_EXPERIMENT_ID || "0";
 
 function normalizeCourse(raw) {
   const totalSeats = Number(raw.intake_limit || 0);
@@ -61,6 +63,15 @@ function readDb() {
 
 function writeDb(db) {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+
+function ensureDbCollections(db) {
+  if (!Array.isArray(db.recommendationHistory)) {
+    db.recommendationHistory = [];
+  }
+  if (!Array.isArray(db.mlflowRuns)) {
+    db.mlflowRuns = [];
+  }
 }
 
 function seatsLeft(course) {
@@ -211,6 +222,66 @@ function buildRecommendations(userId, questionnaire, db) {
   return ranked;
 }
 
+async function trackMlflowRun({ userId, questionnaireId, recommendations }) {
+  if (!MLFLOW_TRACKING_URI) return;
+  try {
+    const payload = {
+      experiment_id: MLFLOW_EXPERIMENT_ID,
+      user_id: userId,
+      questionnaire_id: questionnaireId,
+      top_score: recommendations[0]?.match_score || 0,
+      avg_score: recommendations.length
+        ? Math.round(recommendations.reduce((acc, r) => acc + r.match_score, 0) / recommendations.length)
+        : 0,
+      recommendation_count: recommendations.length,
+      timestamp: new Date().toISOString()
+    };
+
+    await fetch(`${MLFLOW_TRACKING_URI.replace(/\/$/, "")}/api/2.0/mlflow/runs/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        experiment_id: String(payload.experiment_id),
+        tags: [
+          { key: "source", value: "electifind" },
+          { key: "user_id", value: String(payload.user_id) },
+          { key: "questionnaire_id", value: String(payload.questionnaire_id || "") }
+        ]
+      })
+    }).catch(() => {});
+  } catch {
+    // Non-blocking telemetry.
+  }
+}
+
+function persistRecommendationRun(db, userId, questionnaireId, recs) {
+  ensureDbCollections(db);
+  const run = {
+    id: randomUUID(),
+    user_id: userId,
+    questionnaire_id: questionnaireId,
+    created_at: new Date().toISOString(),
+    recommendations: recs.map((r) => ({
+      course_id: r.course_id,
+      match_score: r.match_score,
+      explanation: r.explanation
+    }))
+  };
+  db.recommendationHistory.push(run);
+  db.mlflowRuns.push({
+    id: randomUUID(),
+    user_id: userId,
+    questionnaire_id: questionnaireId,
+    created_at: run.created_at,
+    top_score: recs[0]?.match_score || 0,
+    avg_score: recs.length ? Math.round(recs.reduce((acc, r) => acc + r.match_score, 0) / recs.length) : 0,
+    tracked: Boolean(MLFLOW_TRACKING_URI)
+  });
+  return run;
+}
+
 function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
@@ -328,6 +399,7 @@ app.put("/api/profile", auth, (req, res) => {
 app.post("/api/questionnaire", auth, (req, res) => {
   const { version = "v1", responses_json = {}, completed = false, step = 1 } = req.body;
   const db = readDb();
+  ensureDbCollections(db);
   const questionnaire = {
     id: randomUUID(),
     user_id: req.user.id,
@@ -344,6 +416,8 @@ app.post("/api/questionnaire", auth, (req, res) => {
     const recs = buildRecommendations(req.user.id, questionnaire, db);
     db.recommendations = db.recommendations.filter((r) => r.user_id !== req.user.id);
     db.recommendations.push(...recs);
+    persistRecommendationRun(db, req.user.id, questionnaire.id, recs);
+    trackMlflowRun({ userId: req.user.id, questionnaireId: questionnaire.id, recommendations: recs });
   }
 
   writeDb(db);
@@ -352,6 +426,7 @@ app.post("/api/questionnaire", auth, (req, res) => {
 
 app.put("/api/questionnaire/:id", auth, (req, res) => {
   const db = readDb();
+  ensureDbCollections(db);
   const idx = db.questionnaires.findIndex((q) => q.id === req.params.id && q.user_id === req.user.id);
   if (idx < 0) {
     return res.status(404).json({ error: "Questionnaire not found" });
@@ -367,6 +442,8 @@ app.put("/api/questionnaire/:id", auth, (req, res) => {
     const recs = buildRecommendations(req.user.id, db.questionnaires[idx], db);
     db.recommendations = db.recommendations.filter((r) => r.user_id !== req.user.id);
     db.recommendations.push(...recs);
+    persistRecommendationRun(db, req.user.id, db.questionnaires[idx].id, recs);
+    trackMlflowRun({ userId: req.user.id, questionnaireId: db.questionnaires[idx].id, recommendations: recs });
   }
 
   writeDb(db);
@@ -405,6 +482,7 @@ app.get("/api/courses/:id", auth, (req, res) => {
 
 app.get("/api/recommendations", auth, (req, res) => {
   const db = readDb();
+  ensureDbCollections(db);
   const recs = db.recommendations
     .filter((r) => r.user_id === req.user.id)
     .sort((a, b) => b.match_score - a.match_score)
@@ -418,6 +496,24 @@ app.get("/api/recommendations", auth, (req, res) => {
       };
     });
   return res.json(recs);
+});
+
+app.get("/api/recommendations/history", auth, (req, res) => {
+  const db = readDb();
+  ensureDbCollections(db);
+  const history = db.recommendationHistory
+    .filter((h) => h.user_id === req.user.id)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const resolved = history.map((entry) => ({
+    ...entry,
+    recommendations: (entry.recommendations || []).map((r) => ({
+      ...r,
+      course: COURSES.find((c) => c.id === r.course_id)
+    }))
+  }));
+
+  return res.json(resolved);
 });
 
 app.get("/api/recommendations/:id/explain", auth, (req, res) => {
