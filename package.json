@@ -15,7 +15,9 @@
     "test:watch": "vitest",
     "test:e2e": "vitest run backend/tests/questionnaire-flow.e2e.test.js",
     "test:cross-browser": "playwright test",
-    "test:perf": "node scripts/perf-smoke.mjs"
+    "test:perf": "node scripts/perf-smoke.mjs",
+    "db:prod:init": "node scripts/init-prod-db.mjs",
+    "demo:prep": "node scripts/demo-prep.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

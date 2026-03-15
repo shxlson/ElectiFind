@@ -99,6 +99,18 @@ Optional perf env vars:
 - `PERF_ITERATIONS` (default `30`)
 - `PERF_WARN_MS` (default `350`)
 
+Initialize or validate production DB schema:
+
+```bash
+npm run db:prod:init
+```
+
+Demo preflight (build + tests + e2e):
+
+```bash
+npm run demo:prep
+```
+
 ## Deployment
 
 ### Docker
@@ -111,6 +123,8 @@ docker run -p 4000:4000 -e JWT_SECRET=change-me electifind
 ### Render
 
 `render.yaml` is included for one-service deployment.
+
+Production DB is configured to use a persistent disk mounted at `/var/data`, with `DB_PATH=/var/data/db.json`.
 
 Required secret env var:
 

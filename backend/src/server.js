@@ -21,6 +21,43 @@ const FRONTEND_DIST_PATH = path.resolve(process.cwd(), process.env.FRONTEND_DIST
 const MLFLOW_TRACKING_URI = process.env.MLFLOW_TRACKING_URI || "";
 const MLFLOW_EXPERIMENT_ID = process.env.MLFLOW_EXPERIMENT_ID || "0";
 
+const DEFAULT_DB = {
+  users: [],
+  questionnaires: [],
+  recommendations: [],
+  enrollments: [],
+  posts: [],
+  replies: [],
+  passwordResetRequests: [],
+  recommendationHistory: [],
+  mlflowRuns: []
+};
+
+function ensureDbStorage() {
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  if (!fs.existsSync(DB_PATH)) {
+    fs.writeFileSync(DB_PATH, JSON.stringify(DEFAULT_DB, null, 2));
+    return;
+  }
+
+  try {
+    const current = JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
+    const merged = {
+      ...DEFAULT_DB,
+      ...current
+    };
+    fs.writeFileSync(DB_PATH, JSON.stringify(merged, null, 2));
+  } catch {
+    fs.writeFileSync(DB_PATH, JSON.stringify(DEFAULT_DB, null, 2));
+  }
+}
+
+ensureDbStorage();
+
 if (fs.existsSync(FRONTEND_DIST_PATH)) {
   app.use(express.static(FRONTEND_DIST_PATH));
 }

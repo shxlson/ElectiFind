@@ -3,6 +3,10 @@ services:
     name: electifind
     env: node
     plan: free
+    disk:
+      name: electifind-data
+      mountPath: /var/data
+      sizeGB: 1
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
@@ -13,6 +17,6 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: DB_PATH
-        value: backend/data/db.json
+        value: /var/data/db.json
       - key: DATASET_PATH
         value: electives_dataset.json
