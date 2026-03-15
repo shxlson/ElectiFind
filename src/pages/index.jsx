@@ -948,13 +948,46 @@ const QuestionnairePage = ({ setPage, topBarProps = {} }) => {
   const [sliderVal, setSliderVal] = useState(3);
   const [skills, setSkills] = useState({ "Python / Coding": 3, "Statistics / Math": 2, "System Design": 3, "Communication": 4 });
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
-  const handleNext = () => {
-    if (step < questions.length - 1) setStep(s => s + 1);
-    else setDone(true);
+  const handleNext = async () => {
+    if (submitting) return;
+
+    if (step < questions.length - 1) {
+      setStep(s => s + 1);
+      return;
+    }
+
+    const responsesJson = {
+      1: answers[1] || "",
+      2: sliderVal,
+      3: answers[3] || "",
+      4: skills,
+      5: answers[5] || ""
+    };
+
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      await apiRequest("/api/questionnaire", {
+        method: "POST",
+        body: JSON.stringify({
+          version: "v1",
+          responses_json: responsesJson,
+          completed: true,
+          step: questions.length
+        })
+      });
+      setDone(true);
+    } catch (err) {
+      setSubmitError(err.message || "Could not save questionnaire. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) return (
@@ -1057,8 +1090,15 @@ const QuestionnairePage = ({ setPage, topBarProps = {} }) => {
 
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 40 }}>
             <button className="btn-ghost" onClick={() => step > 0 && setStep(s => s - 1)} style={{ opacity: step === 0 ? 0.4 : 1 }}>← Back</button>
-            <button className="btn-primary" onClick={handleNext}>{step === questions.length - 1 ? "Get Recommendations →" : "Next →"}</button>
+            <button className="btn-primary" onClick={handleNext} disabled={submitting} style={{ opacity: submitting ? 0.7 : 1 }}>
+              {step === questions.length - 1 ? (submitting ? "Saving..." : "Get Recommendations →") : "Next →"}
+            </button>
           </div>
+          {submitError && (
+            <div style={{ marginTop: 14, color: "#ff6b6b", fontSize: 13 }}>
+              {submitError}
+            </div>
+          )}
         </div>
       </div>
     </div>

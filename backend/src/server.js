@@ -70,6 +70,7 @@ function normalizeCourse(raw) {
   const tags = Array.isArray(raw.domain_tags)
     ? raw.domain_tags.map((t) => String(t).toLowerCase())
     : [];
+  const tagTokens = normalizeTagTokens(raw.domain_tags || []);
   const units = Array.isArray(raw.units) ? raw.units : [];
 
   return {
@@ -80,6 +81,7 @@ function normalizeCourse(raw) {
     difficulty: raw.difficulty || "Intermediate",
     professor: "Faculty Assigned by Department",
     tags,
+    tag_tokens: tagTokens,
     seats_total: totalSeats,
     seats_filled: filledSeats,
     rating: 4.2,
@@ -89,6 +91,39 @@ function normalizeCourse(raw) {
     topics: raw.topics || [],
     units
   };
+}
+
+function normalizeTagTokens(rawTags) {
+  const tags = Array.isArray(rawTags) ? rawTags.map((t) => String(t).toLowerCase()) : [];
+  const tokens = new Set();
+
+  for (const tag of tags) {
+    const normalized = tag.replace(/&/g, " ").replace(/\//g, " ").replace(/[^a-z0-9\s-]/g, " ");
+    normalized.split(/\s+/).filter(Boolean).forEach((word) => tokens.add(word));
+
+    if (tag.includes("ai") || tag.includes("machine learning")) ["ml", "ai", "data"].forEach((t) => tokens.add(t));
+    if (tag.includes("data science") || tag.includes("analytics")) ["data", "statistics", "ml"].forEach((t) => tokens.add(t));
+    if (tag.includes("cloud")) ["cloud", "systems", "backend"].forEach((t) => tokens.add(t));
+    if (tag.includes("cybersecurity")) ["security", "crypto", "systems"].forEach((t) => tokens.add(t));
+    if (tag.includes("web")) ["web", "frontend", "backend"].forEach((t) => tokens.add(t));
+    if (tag.includes("software engineering")) ["software", "systems", "backend"].forEach((t) => tokens.add(t));
+    if (tag.includes("mathematics") || tag.includes("theory")) ["math", "theory", "algorithms"].forEach((t) => tokens.add(t));
+    if (tag.includes("network")) ["networking", "systems"].forEach((t) => tokens.add(t));
+    if (tag.includes("iot") || tag.includes("embedded")) ["iot", "systems"].forEach((t) => tokens.add(t));
+    if (tag.includes("blockchain")) ["blockchain", "crypto", "security"].forEach((t) => tokens.add(t));
+    if (tag.includes("ar") || tag.includes("vr")) ["design", "hci", "graphics"].forEach((t) => tokens.add(t));
+    if (tag.includes("game")) ["game", "design", "graphics"].forEach((t) => tokens.add(t));
+    if (tag.includes("nlp") || tag.includes("speech")) ["nlp", "ml"].forEach((t) => tokens.add(t));
+    if (tag.includes("robotics")) ["robotics", "systems", "ml"].forEach((t) => tokens.add(t));
+    if (tag.includes("business") || tag.includes("marketing")) ["business", "product"].forEach((t) => tokens.add(t));
+  }
+
+  return [...tokens];
+}
+
+function hasAnyTag(course, wantedTokens) {
+  const tokenSet = new Set(Array.isArray(course?.tag_tokens) ? course.tag_tokens : []);
+  return wantedTokens.some((token) => tokenSet.has(token));
 }
 
 function loadCourses() {
@@ -132,30 +167,30 @@ function clampScore(value) {
 
 function contentAlignmentScore(course, focus) {
   if (!focus) return 55;
-  if (focus.includes("data") && course.tags.includes("ml")) return 95;
-  if (focus.includes("systems") && (course.tags.includes("systems") || course.tags.includes("cloud") || course.tags.includes("backend"))) return 90;
-  if (focus.includes("security") && (course.tags.includes("security") || course.tags.includes("crypto"))) return 92;
-  if (focus.includes("design") && (course.tags.includes("frontend") || course.tags.includes("hci"))) return 88;
-  if (focus.includes("theory") && course.tags.includes("algorithms")) return 86;
+  if (focus.includes("data") && hasAnyTag(course, ["ml", "data", "statistics"])) return 95;
+  if (focus.includes("systems") && hasAnyTag(course, ["systems", "cloud", "backend", "networking", "iot"])) return 90;
+  if (focus.includes("security") && hasAnyTag(course, ["security", "crypto", "networking"])) return 92;
+  if (focus.includes("design") && hasAnyTag(course, ["frontend", "hci", "design", "graphics"])) return 88;
+  if (focus.includes("theory") && hasAnyTag(course, ["algorithms", "theory", "math"])) return 86;
   return 60;
 }
 
 function careerAlignmentScore(course, career) {
   if (!career) return 55;
-  if (career.includes("data") && course.tags.includes("ml")) return 92;
-  if (career.includes("software") && (course.tags.includes("backend") || course.tags.includes("web") || course.tags.includes("cloud"))) return 86;
-  if (career.includes("research") && (course.tags.includes("ml") || course.tags.includes("systems") || course.tags.includes("security"))) return 84;
-  if (career.includes("product") && (course.tags.includes("frontend") || course.tags.includes("hci") || course.tags.includes("systems"))) return 78;
+  if (career.includes("data") && hasAnyTag(course, ["ml", "data", "statistics", "nlp"])) return 92;
+  if (career.includes("software") && hasAnyTag(course, ["backend", "web", "cloud", "systems"])) return 86;
+  if (career.includes("research") && hasAnyTag(course, ["ml", "systems", "security", "theory"])) return 84;
+  if (career.includes("product") && hasAnyTag(course, ["frontend", "hci", "design", "business"])) return 78;
   return 58;
 }
 
 function skillCompatibilityScore(course, mathComfort, skillAverage) {
   const base = 52 + (skillAverage * 8);
   let modifier = 0;
-  if (course.tags.includes("ml") || course.tags.includes("crypto")) {
+  if (hasAnyTag(course, ["ml", "crypto", "theory", "math"])) {
     modifier += mathComfort >= 4 ? 10 : mathComfort <= 2 ? -12 : 0;
   }
-  if (course.tags.includes("frontend") || course.tags.includes("hci")) {
+  if (hasAnyTag(course, ["frontend", "hci", "design", "graphics"])) {
     modifier += mathComfort <= 2 ? 6 : 0;
   }
   return clampScore(base + modifier);
