@@ -15,8 +15,8 @@ app.use(express.json());
 
 const PORT = Number(process.env.PORT || 4000);
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
-const DB_PATH = path.resolve(process.cwd(), "backend/data/db.json");
-const DATASET_PATH = path.resolve(process.cwd(), "electives_dataset.json");
+const DB_PATH = path.resolve(process.cwd(), process.env.DB_PATH || "backend/data/db.json");
+const DATASET_PATH = path.resolve(process.cwd(), process.env.DATASET_PATH || "electives_dataset.json");
 const MLFLOW_TRACKING_URI = process.env.MLFLOW_TRACKING_URI || "";
 const MLFLOW_EXPERIMENT_ID = process.env.MLFLOW_EXPERIMENT_ID || "0";
 
@@ -673,7 +673,11 @@ app.post("/api/posts/:id/upvote", auth, (req, res) => {
   return res.json({ upvotes: db.posts[idx].upvotes });
 });
 
-app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`ElectiFind API running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    // eslint-disable-next-line no-console
+    console.log(`ElectiFind API running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
