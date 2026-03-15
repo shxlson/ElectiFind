@@ -48,3 +48,6 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Local planning/tracking notes
+JIRA-SETUP.md
+
