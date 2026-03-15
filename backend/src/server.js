@@ -383,12 +383,14 @@ app.post("/api/auth/register", async (req, res) => {
   if (!name || !email || !password) {
     return res.status(400).json({ error: "name, email and password are required" });
   }
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const normalizedName = String(name).trim();
   if (String(password).length < 6) {
     return res.status(400).json({ error: "Password must be at least 6 characters" });
   }
 
   const db = readDb();
-  const exists = db.users.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
+  const exists = db.users.find((u) => u.email.toLowerCase() === normalizedEmail);
   if (exists) {
     return res.status(409).json({ error: "User already exists" });
   }
@@ -396,13 +398,12 @@ app.post("/api/auth/register", async (req, res) => {
   const password_hash = await bcrypt.hash(password, 10);
   const user = {
     id: randomUUID(),
-    name,
-    email,
+    name: normalizedName,
+    email: normalizedEmail,
     password_hash,
     roll_no: "",
     department: "Computer Science & Engineering",
     batch: "2021-2025",
-    semester: "Sem 6",
     advisor: "",
     interests: [],
     created_at: new Date().toISOString()
@@ -419,8 +420,9 @@ app.post("/api/auth/login", async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: "email and password are required" });
   }
+  const normalizedEmail = String(email).trim().toLowerCase();
   const db = readDb();
-  const user = db.users.find((u) => u.email.toLowerCase() === String(email).toLowerCase());
+  const user = db.users.find((u) => u.email.toLowerCase() === normalizedEmail);
   if (!user) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
@@ -437,10 +439,11 @@ app.post("/api/auth/forgot-password", (req, res) => {
   if (!email) {
     return res.status(400).json({ error: "email is required" });
   }
+  const normalizedEmail = String(email).trim().toLowerCase();
   const db = readDb();
   db.passwordResetRequests.push({
     id: randomUUID(),
-    email,
+    email: normalizedEmail,
     requested_at: new Date().toISOString(),
     status: "queued"
   });
@@ -463,7 +466,7 @@ app.put("/api/profile", auth, (req, res) => {
   if (userIdx < 0) {
     return res.status(404).json({ error: "User not found" });
   }
-  const editableFields = ["name", "roll_no", "department", "batch", "semester", "advisor", "interests"];
+  const editableFields = ["name", "roll_no", "department", "batch", "advisor", "interests"];
   for (const field of editableFields) {
     if (field in req.body) {
       db.users[userIdx][field] = req.body[field];
@@ -547,6 +550,10 @@ app.get("/api/courses/search", auth, (req, res) => {
   const q = String(req.query.q || "").toLowerCase();
   const results = COURSES.filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
   res.json(results);
+});
+
+app.get("/api/courses", auth, (_req, res) => {
+  res.json(COURSES);
 });
 
 app.get("/api/courses/:id", auth, (req, res) => {
@@ -667,16 +674,15 @@ app.get("/api/electives", auth, (req, res) => {
 });
 
 app.post("/api/electives", auth, (req, res) => {
-  const { course_id, semester, status = "ongoing", grade = "-", rating = null } = req.body;
-  if (!course_id || !semester) {
-    return res.status(400).json({ error: "course_id and semester are required" });
+  const { course_id, status = "ongoing", grade = "-", rating = null } = req.body;
+  if (!course_id) {
+    return res.status(400).json({ error: "course_id is required" });
   }
   const db = readDb();
   const enrollment = {
     id: randomUUID(),
     user_id: req.user.id,
     course_id,
-    semester,
     status,
     grade,
     rating,
@@ -689,9 +695,16 @@ app.post("/api/electives", auth, (req, res) => {
 
 app.get("/api/posts", auth, (req, res) => {
   const db = readDb();
+  const usersById = new Map((db.users || []).map((u) => [u.id, u]));
   const posts = db.posts.map((p) => ({
     ...p,
-    replies: db.replies.filter((r) => r.post_id === p.id)
+    author_name: usersById.get(p.user_id)?.name || "Student",
+    replies: db.replies
+      .filter((r) => r.post_id === p.id)
+      .map((r) => ({
+        ...r,
+        author_name: usersById.get(r.user_id)?.name || "Student"
+      }))
   }));
   return res.json(posts);
 });
@@ -714,7 +727,8 @@ app.post("/api/posts", auth, (req, res) => {
   };
   db.posts.push(post);
   writeDb(db);
-  return res.status(201).json(post);
+  const user = db.users.find((u) => u.id === req.user.id);
+  return res.status(201).json({ ...post, author_name: user?.name || "Student", replies: [] });
 });
 
 app.post("/api/posts/:id/reply", auth, (req, res) => {
@@ -736,7 +750,8 @@ app.post("/api/posts/:id/reply", auth, (req, res) => {
   };
   db.replies.push(reply);
   writeDb(db);
-  return res.status(201).json(reply);
+  const user = db.users.find((u) => u.id === req.user.id);
+  return res.status(201).json({ ...reply, author_name: user?.name || "Student" });
 });
 
 app.post("/api/posts/:id/upvote", auth, (req, res) => {

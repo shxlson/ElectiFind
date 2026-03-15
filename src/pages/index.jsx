@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 async function apiRequest(path, options = {}) {
   const token = localStorage.getItem("electifind_token");
@@ -13,13 +13,28 @@ async function apiRequest(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    });
+  } catch {
+    const networkErr = new Error(`Cannot reach API at ${API_BASE}`);
+    networkErr.status = 0;
+    networkErr.path = path;
+    throw networkErr;
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || "Request failed");
+    if (res.status === 401) {
+      localStorage.removeItem("electifind_token");
+    }
+    const err = new Error(data.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.path = path;
+    throw err;
   }
   return data;
 }
@@ -316,7 +331,7 @@ const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose
         }}>SN</div>
         <div>
           <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>Sarvagna</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>CSE • Sem 6</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>CSE</div>
         </div>
       </div>
     </div>
@@ -326,110 +341,104 @@ const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose
 const TopBar = ({
   title,
   setPage,
-  searchValue = "",
-  onSearchChange,
-  onSearchSubmit,
-  searchResults = [],
-  searchLoading = false,
-  onSearchSelect,
+  onLogout,
   showMenuButton = false,
   onToggleMenu
-}) => (
-  <div style={{
-    height: 64, background: "rgba(17,16,9,0.88)", backdropFilter: "blur(20px)",
-    borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center",
-    justifyContent: "space-between", padding: "0 32px",
-    position: "sticky", top: 0, zIndex: 50
-  }}>
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      {showMenuButton && (
+}) => {
+  const [openMenu, setOpenMenu] = useState(false);
+
+  return (
+    <div style={{
+      height: 64, background: "rgba(17,16,9,0.88)", backdropFilter: "blur(20px)",
+      borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center",
+      justifyContent: "space-between", padding: "0 32px",
+      position: "sticky", top: 0, zIndex: 50
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {showMenuButton && (
+          <button
+            onClick={onToggleMenu}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >☰</button>
+        )}
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--text-primary)" }}>{title}</h2>
+      </div>
+      <div style={{ position: "relative" }}>
         <button
-          onClick={onToggleMenu}
+          onClick={() => setOpenMenu((v) => !v)}
           style={{
             width: 38,
             height: 38,
-            borderRadius: 10,
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            color: "var(--text-secondary)",
-            fontSize: 16,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #7c4a1e, #e8913a)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--text-primary)"
           }}
-        >☰</button>
-      )}
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, color: "var(--text-primary)" }}>{title}</h2>
-    </div>
-    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        background: "var(--surface)", border: "1px solid var(--border)",
-        borderRadius: 14, padding: "8px 16px", position: "relative"
-      }}>
-        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>⌕</span>
-        <input
-          placeholder="Search courses..."
-          value={searchValue}
-          onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && onSearchSubmit) {
-              onSearchSubmit(searchValue);
-            }
-          }}
-          style={{
-          background: "none", border: "none", outline: "none",
-          color: "var(--text-secondary)", fontSize: 13, width: 180
-        }} />
-        {(searchLoading || searchResults.length > 0) && (
+        >SN</button>
+        {openMenu && (
           <div style={{
             position: "absolute",
-            top: 42,
-            left: 0,
             right: 0,
-            background: "#201a12",
-            border: "1px solid var(--border)",
+            top: 46,
+            width: 170,
             borderRadius: 12,
-            padding: "8px",
+            border: "1px solid var(--border)",
+            background: "#201a12",
+            boxShadow: "var(--shadow-card)",
+            padding: 8,
             zIndex: 120
           }}>
-            {searchLoading && <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "6px 8px" }}>Searching...</div>}
-            {!searchLoading && searchResults.slice(0, 6).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => onSearchSelect && onSearchSelect(item)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  background: "transparent",
-                  color: "var(--text-secondary)",
-                  border: "1px solid transparent",
-                  borderRadius: 8,
-                  padding: "8px"
-                }}
-              >
-                <div style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{item.name}</div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{item.code}</div>
-              </button>
-            ))}
+            <button
+              onClick={() => {
+                setOpenMenu(false);
+                setPage("profile");
+              }}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "transparent",
+                color: "var(--text-secondary)",
+                fontSize: 13
+              }}
+            >Profile</button>
+            <button
+              onClick={() => {
+                setOpenMenu(false);
+                if (onLogout) onLogout();
+              }}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "transparent",
+                color: "#ffb3b3",
+                fontSize: 13
+              }}
+            >Logout</button>
           </div>
         )}
       </div>
-      <button style={{
-        width: 38, height: 38, borderRadius: 10,
-        background: "var(--surface)", border: "1px solid var(--border)",
-        color: "var(--text-secondary)", fontSize: 16, display: "flex",
-        alignItems: "center", justifyContent: "center"
-      }}>🔔</button>
-      <div style={{
-        width: 38, height: 38, borderRadius: "50%",
-        background: "linear-gradient(135deg, #7c4a1e, #e8913a)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 13, fontWeight: 600, cursor: "pointer"
-      }}>SN</div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 
@@ -450,9 +459,9 @@ const LandingPage = ({ setPage }) => {
   ];
 
   const testimonials = [
-    { name: "Shrizz.", dept: "ECE • Sem 6", review: "I was stuck between 4 electives. ElectiFind showed me exactly why ML for Engineers was the right fit — the explainability feature is incredible.", rating: 5 },
-    { name: "Sarv", dept: "CSE • Sem 7", review: "The seat availability integration saved me from choosing a course that would've been full by the time I registered.", rating: 5 },
-    { name: "Shel.", dept: "Mech • Sem 5", review: "Honestly felt like talking to a senior who'd taken all the courses. The community discussions were super helpful.", rating: 4 },
+    { name: "Shrizz.", dept: "ECE", review: "I was stuck between 4 electives. ElectiFind showed me exactly why ML for Engineers was the right fit — the explainability feature is incredible.", rating: 5 },
+    { name: "Sarv", dept: "CSE", review: "The seat availability integration saved me from choosing a course that would've been full by the time I registered.", rating: 5 },
+    { name: "Shel.", dept: "Mech", review: "Honestly felt like talking to a senior who'd taken all the courses. The community discussions were super helpful.", rating: 4 },
   ];
 
   return (
@@ -829,12 +838,24 @@ const courses = [
   { id: 3, name: "Network Security and Cryptography", code: "21CSE358T", credits: 4, difficulty: "Advanced", seats: 8, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "Discrete Mathematics"] },
 ];
 
-const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false, topBarProps = {}, onAddCompare }) => {
+const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false, topBarProps = {}, onAddCompare, userName = "Student", questionnaireStatus = null }) => {
+  const totalQuestions = 5;
+  const completed = Boolean(questionnaireStatus?.completed);
+  const rawStep = Number(questionnaireStatus?.step || 0);
+  const currentStep = completed ? totalQuestions : Math.max(0, Math.min(totalQuestions, rawStep));
+  const progressRatio = totalQuestions ? currentStep / totalQuestions : 0;
+  const progressPercent = Math.round(progressRatio * 100);
+  const statusMessage = questionnaireStatus?.exists
+    ? (completed
+      ? "Your questionnaire is complete. Retake it anytime for refreshed recommendations."
+      : `Your questionnaire is ${progressPercent}% complete. Finish it to unlock full recommendations.`)
+    : "Start your questionnaire to unlock personalized recommendations.";
+
   const stats = [
     { label: "Recommended", value: String(statsData?.recommended ?? coursesData.length), sub: "Electives", icon: "◈" },
     { label: "Seats Remaining", value: `Avg ${statsData?.avgSeats ?? "13.7"}`, sub: "Across matches", icon: "⊡" },
     { label: "Interest Match", value: String(statsData?.interestMatch ?? "88%"), sub: "Avg score", icon: "✦" },
-    { label: "Credits Taken", value: String(statsData?.creditsTaken ?? "18"), sub: "This semester", icon: "⊞" },
+    { label: "Credits Taken", value: String(statsData?.creditsTaken ?? "18"), sub: "Overall", icon: "⊞" },
   ];
 
   return (
@@ -847,17 +868,17 @@ const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsD
           <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p style={{ color: "var(--text-muted)", fontSize: 13, fontFamily: "var(--font-mono)", marginBottom: 6 }}>MONDAY, MARCH 2025</p>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Good Morning, Sarvagna ✦</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>Your questionnaire is 60% complete. Finish it to unlock full recommendations.</p>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Good Morning, {userName} ✦</h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>{statusMessage}</p>
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8, fontFamily: "var(--font-mono)" }}>QUESTIONNAIRE PROGRESS</div>
               <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
                 {[1,2,3,4,5].map(i => (
-                  <div key={i} style={{ width: 28, height: 6, borderRadius: 3, background: i <= 3 ? "var(--teal)" : "var(--surface-2)" }} />
+                  <div key={i} style={{ width: 28, height: 6, borderRadius: 3, background: i <= currentStep ? "var(--teal)" : "var(--surface-2)" }} />
                 ))}
               </div>
-              <button className="btn-primary" onClick={() => setPage("questionnaire")} style={{ fontSize: 13, padding: "9px 20px" }}>Continue →</button>
+              <button className="btn-primary" onClick={() => setPage("questionnaire")} style={{ fontSize: 13, padding: "9px 20px" }}>{completed ? "Retake →" : "Continue →"}</button>
             </div>
           </div>
         </div>
@@ -934,24 +955,85 @@ const CourseCard = ({ course, idx, onView, onCompare }) => {
 
 // ─── Questionnaire ────────────────────────────────────────────────────────────
 
-const questions = [
-  { id: 1, type: "choice", q: "What best describes your academic focus?", opts: ["Algorithms & Theory", "Systems & Infrastructure", "Data & AI/ML", "Design & HCI", "Security & Networks"] },
-  { id: 2, type: "slider", q: "How comfortable are you with mathematics-heavy content?", min: 1, max: 5, labels: ["Avoid it", "Love it"] },
-  { id: 3, type: "choice", q: "What type of career are you targeting?", opts: ["Software Engineer", "Data Scientist", "Product Manager", "Research Scientist", "Startup Founder", "Undecided"] },
-  { id: 4, type: "skill", q: "Rate your current skill level:", skills: ["Python / Coding", "Statistics / Math", "System Design", "Communication"] },
-  { id: 5, type: "scenario", q: "You have 8 credits left this semester. What's your priority?", opts: ["Learn something deep and challenging", "Maintain GPA with manageable workload", "Explore an entirely new domain", "Build a portfolio-worthy project"] },
-];
+const QUESTION_BANK = {
+  focusPrompts: [
+    "What best describes your current academic focus?",
+    "Which track do you want to emphasize next?",
+    "Pick the area you want your next elective to strengthen the most:"
+  ],
+  focusOptions: [
+    ["Algorithms & Theory", "Systems & Infrastructure", "Data & AI/ML", "Design & HCI", "Security & Networks"],
+    ["Data & AI/ML", "Cloud & Backend Systems", "Cybersecurity", "Product & UX", "Core Computing Theory"],
+    ["Applied AI", "Distributed Systems", "Secure Engineering", "Interface Design", "Math-heavy Foundations"]
+  ],
+  mathPrompts: [
+    "How comfortable are you with mathematics-heavy content?",
+    "How much quantitative depth are you ready for?",
+    "For your next elective, how much math rigor do you prefer?"
+  ],
+  careerPrompts: [
+    "What type of career are you targeting?",
+    "Which role are you optimizing your profile for?",
+    "What outcome matters most for your next elective choice?"
+  ],
+  careerOptions: [
+    ["Software Engineer", "Data Scientist", "Product Manager", "Research Scientist", "Startup Founder", "Undecided"],
+    ["Backend Engineer", "ML Engineer", "Security Engineer", "Product Engineer", "Higher Studies", "Still Exploring"],
+    ["Core Software Role", "AI/ML Role", "Systems Role", "Research Path", "Startup Building", "Not Sure Yet"]
+  ],
+  skillSets: [
+    ["Python / Coding", "Statistics / Math", "System Design", "Communication"],
+    ["Programming Fluency", "Analytical Thinking", "Debugging", "Technical Writing"],
+    ["Implementation Speed", "Math Confidence", "Architecture Skills", "Collaboration"]
+  ],
+  scenarioPrompts: [
+    "You can pick two electives. What is your priority?",
+    "You want your next elective to be most useful for:",
+    "What tradeoff are you willing to make in your next elective?"
+  ],
+  scenarioOptions: [
+    ["Learn something deep and challenging", "Maintain GPA with manageable workload", "Explore an entirely new domain", "Build a portfolio-worthy project"],
+    ["Depth over breadth", "Balance effort and grades", "Industry-ready project output", "Try an unfamiliar domain"],
+    ["Higher challenge for better learning", "Lower risk for stable performance", "Project-heavy practical exposure", "Flexible and exploratory learning"]
+  ]
+};
 
-const QuestionnairePage = ({ setPage, topBarProps = {} }) => {
+function buildQuestionSet(recommendationHistory = []) {
+  const attempt = Array.isArray(recommendationHistory) ? recommendationHistory.length + 1 : 1;
+  const idx = (attempt - 1) % 3;
+
+  return [
+    { id: 1, type: "choice", q: QUESTION_BANK.focusPrompts[idx], opts: QUESTION_BANK.focusOptions[idx] },
+    { id: 2, type: "slider", q: QUESTION_BANK.mathPrompts[idx], min: 1, max: 5, labels: ["Avoid it", "Love it"] },
+    { id: 3, type: "choice", q: QUESTION_BANK.careerPrompts[idx], opts: QUESTION_BANK.careerOptions[idx] },
+    { id: 4, type: "skill", q: "Rate your current skill level:", skills: QUESTION_BANK.skillSets[idx] },
+    { id: 5, type: "scenario", q: QUESTION_BANK.scenarioPrompts[idx], opts: QUESTION_BANK.scenarioOptions[idx] }
+  ];
+}
+
+const QuestionnairePage = ({ setPage, topBarProps = {}, recommendationHistory = [], onSubmitted }) => {
+  const [questions, setQuestions] = useState(() => buildQuestionSet(recommendationHistory));
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [sliderVal, setSliderVal] = useState(3);
-  const [skills, setSkills] = useState({ "Python / Coding": 3, "Statistics / Math": 2, "System Design": 3, "Communication": 4 });
+  const [skills, setSkills] = useState(() => {
+    const initialSkills = buildQuestionSet(recommendationHistory)[3].skills;
+    return initialSkills.reduce((acc, skill) => ({ ...acc, [skill]: 3 }), {});
+  });
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const q = questions[step];
+  useEffect(() => {
+    const nextQuestions = buildQuestionSet(recommendationHistory);
+    setQuestions(nextQuestions);
+    setStep(0);
+    setAnswers({});
+    setSliderVal(3);
+    setSkills(nextQuestions[3].skills.reduce((acc, skill) => ({ ...acc, [skill]: 3 }), {}));
+  }, [recommendationHistory.length]);
+
+  const q = questions[step] || questions[0];
   const progress = ((step + 1) / questions.length) * 100;
 
   const handleNext = async () => {
@@ -982,6 +1064,7 @@ const QuestionnairePage = ({ setPage, topBarProps = {} }) => {
           step: questions.length
         })
       });
+      if (onSubmitted) onSubmitted();
       setDone(true);
     } catch (err) {
       setSubmitError(err.message || "Could not save questionnaire. Please try again.");
@@ -1443,14 +1526,95 @@ const ComparePage = ({ setPage, coursesData = courses, loading = false, topBarPr
 
 // ─── Community ────────────────────────────────────────────────────────────────
 
-const threads = [
-  { id: 1, author: "Rohan M.", course: "21CSE356T", time: "2h ago", title: "How heavy is the NLP course math requirement?", body: "I'm from ECE and worried about probability and optimization basics. Anyone from non-CS background who found it manageable?", upvotes: 34, replies: 12, tags: ["workload", "math"] },
-  { id: 2, author: "Divya S.", course: "21CSE362T", time: "5h ago", title: "Cloud Computing labs — individual or team?", body: "The lab brief says team is preferred but not mandatory. Has anyone done it solo and how was the load?", upvotes: 21, replies: 8, tags: ["project", "cloud"] },
-  { id: 3, author: "Kiran T.", course: "21CSE358T", time: "1d ago", title: "Security prereqs — how much cryptography depth is expected?", body: "The syllabus lists core cryptography topics. Is prior security coursework enough to handle it comfortably?", upvotes: 15, replies: 5, tags: ["prereq", "security"] },
-];
-
 const CommunityPage = ({ setPage, topBarProps = {} }) => {
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
+  const [filterCourse, setFilterCourse] = useState("all");
+  const [newPost, setNewPost] = useState({ course_id: "", title: "", body: "", tags: "" });
+  const [replyDrafts, setReplyDrafts] = useState({});
+
+  const loadCommunity = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [fetchedPosts, fetchedCourses] = await Promise.all([
+        apiRequest("/api/posts"),
+        apiRequest("/api/courses")
+      ]);
+      setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : []);
+      setAllCourses(Array.isArray(fetchedCourses) ? fetchedCourses.map((c) => normalizeCourseForUi(c)).filter(Boolean) : []);
+    } catch (e) {
+      if (e?.status === 401) {
+        setError("Session expired. Please sign in again.");
+        setPage("login");
+        return;
+      }
+      setError(e.message || "Could not load community.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCommunity();
+    const id = setInterval(loadCommunity, 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  const filteredPosts = filterCourse === "all"
+    ? posts
+    : posts.filter((p) => String(p.course_id) === String(filterCourse));
+
+  const submitPost = async () => {
+    if (!newPost.course_id || !newPost.title.trim() || !newPost.body.trim()) return;
+    setError("");
+    try {
+      await apiRequest("/api/posts", {
+        method: "POST",
+        body: JSON.stringify({
+          course_id: newPost.course_id,
+          title: newPost.title.trim(),
+          body: newPost.body.trim(),
+          tags: newPost.tags
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean)
+        })
+      });
+      setShowModal(false);
+      setNewPost({ course_id: "", title: "", body: "", tags: "" });
+      loadCommunity();
+    } catch (e) {
+      setError(e.message || "Unable to publish post.");
+    }
+  };
+
+  const upvote = async (postId) => {
+    try {
+      await apiRequest(`/api/posts/${postId}/upvote`, { method: "POST" });
+      loadCommunity();
+    } catch (e) {
+      setError(e.message || "Unable to upvote.");
+    }
+  };
+
+  const sendReply = async (postId) => {
+    const body = String(replyDrafts[postId] || "").trim();
+    if (!body) return;
+    try {
+      await apiRequest(`/api/posts/${postId}/reply`, {
+        method: "POST",
+        body: JSON.stringify({ body })
+      });
+      setReplyDrafts((prev) => ({ ...prev, [postId]: "" }));
+      loadCommunity();
+    } catch (e) {
+      setError(e.message || "Unable to post reply.");
+    }
+  };
 
   return (
     <div>
@@ -1465,41 +1629,73 @@ const CommunityPage = ({ setPage, topBarProps = {} }) => {
         </div>
 
         {/* Filters */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-          {["All Courses", "21CSE356T – NLP", "21CSE362T – Cloud", "21CSE358T – Security"].map(f => (
-            <button key={f} className="tag teal" style={{ cursor: "pointer", fontSize: 12, padding: "6px 14px" }}>{f}</button>
-          ))}
-          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-            {["Latest", "Top", "Unanswered"].map(s => (
-              <button key={s} className="btn-ghost" style={{ fontSize: 12, padding: "7px 14px" }}>{s}</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+          <span className="tag">Filter</span>
+          <select
+            value={filterCourse}
+            onChange={(e) => setFilterCourse(e.target.value)}
+            style={{
+              maxWidth: 320,
+              padding: "8px 12px",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: 10,
+              color: "var(--text-secondary)",
+              fontSize: 13
+            }}
+          >
+            <option value="all">All courses</option>
+            {allCourses.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
-          </div>
+          </select>
         </div>
 
+        {error && (
+          <div style={{ marginBottom: 14, color: "#ff9d9d", fontSize: 13 }}>{error}</div>
+        )}
+
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {threads.map(t => (
+          {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading community discussions...</div>}
+          {!loading && filteredPosts.length === 0 && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>No posts yet for this filter.</div>}
+          {!loading && filteredPosts.map(t => (
             <div key={t.id} className="card" style={{ padding: "22px 24px", cursor: "pointer" }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-teal)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = ""; }}>
               <div style={{ display: "flex", gap: 16 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 44 }}>
-                  <button style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", color: "var(--text-muted)", fontSize: 14 }}>▲</button>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600, color: "var(--teal)" }}>{t.upvotes}</span>
+                  <button onClick={() => upvote(t.id)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", color: "var(--text-muted)", fontSize: 14 }}>▲</button>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600, color: "var(--teal)" }}>{Number(t.upvotes || 0)}</span>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
-                    <span className="tag teal" style={{ fontSize: 10 }}>{t.course}</span>
-                    {t.tags.map(tag => <span key={tag} className="tag" style={{ fontSize: 10 }}>#{tag}</span>)}
-                    <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: "auto" }}>{t.time}</span>
+                    {(t.tags || []).map(tag => <span key={tag} className="tag" style={{ fontSize: 10 }}>#{tag}</span>)}
+                    <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: "auto" }}>{new Date(t.created_at).toLocaleString()}</span>
                   </div>
                   <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{t.title}</h3>
                   <p style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.6, marginBottom: 12 }}>{t.body}</p>
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg, #7c4a1e, #e8913a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>{t.author[0]}</div>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t.author}</span>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg, #7c4a1e, #e8913a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>{String(t.author_name || "S")[0]}</div>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t.author_name || "Student"}</span>
                     </div>
-                    <button className="btn-ghost" style={{ fontSize: 11, padding: "5px 12px" }}>💬 {t.replies} Replies</button>
+                    <button className="btn-ghost" style={{ fontSize: 11, padding: "5px 12px" }}>💬 {(t.replies || []).length} Replies</button>
+                  </div>
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {(t.replies || []).map((reply) => (
+                      <div key={reply.id} style={{ padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 10, fontSize: 12, color: "var(--text-secondary)" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{reply.author_name || "Student"}:</strong> {reply.body}
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        value={replyDrafts[t.id] || ""}
+                        onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))}
+                        placeholder="Write a reply..."
+                        style={{ flex: 1, padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text-primary)", fontSize: 12, outline: "none" }}
+                      />
+                      <button className="btn-ghost" style={{ fontSize: 12, padding: "8px 12px" }} onClick={() => sendReply(t.id)}>Reply</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1514,16 +1710,37 @@ const CommunityPage = ({ setPage, topBarProps = {} }) => {
           <div className="card" style={{ width: 560, padding: 36, animation: "fadeUp 0.3s ease" }}>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, marginBottom: 24 }}>Create New Post</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <select style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-secondary)", fontSize: 14 }}>
-                <option>Select Course</option>
-                {courses.map(c => <option key={c.id}>{c.code} – {c.name}</option>)}
+              <select
+                value={newPost.course_id}
+                onChange={(e) => setNewPost((prev) => ({ ...prev, course_id: e.target.value }))}
+                style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-secondary)", fontSize: 14 }}
+              >
+                <option value="">Select Course</option>
+                {allCourses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
               </select>
-              <input placeholder="Post title..." style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
-              <textarea placeholder="Share your question or insight..." rows={5} style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-secondary)", fontSize: 14, outline: "none", resize: "vertical" }} />
+              <input
+                value={newPost.title}
+                onChange={(e) => setNewPost((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Post title..."
+                style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-primary)", fontSize: 14, outline: "none" }}
+              />
+              <textarea
+                value={newPost.body}
+                onChange={(e) => setNewPost((prev) => ({ ...prev, body: e.target.value }))}
+                placeholder="Share your question or insight..."
+                rows={5}
+                style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-secondary)", fontSize: 14, outline: "none", resize: "vertical" }}
+              />
+              <input
+                value={newPost.tags}
+                onChange={(e) => setNewPost((prev) => ({ ...prev, tags: e.target.value }))}
+                placeholder="Tags (comma separated, optional)"
+                style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, color: "var(--text-primary)", fontSize: 14, outline: "none" }}
+              />
             </div>
             <div style={{ display: "flex", gap: 12, marginTop: 24, justifyContent: "flex-end" }}>
               <button className="btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn-primary" onClick={() => setShowModal(false)}>Post →</button>
+              <button className="btn-primary" onClick={submitPost}>Post →</button>
             </div>
           </div>
         </div>
@@ -1608,18 +1825,94 @@ const ReviewsPanel = () => {
 // ─── My Electives Page ────────────────────────────────────────────────────────
 
 const MyElectivesPage = ({ setPage, topBarProps = {}, recommendationHistory = [] }) => {
-  const electives = [
-    { name: "Data Mining and Analytics", code: "21CSE355T", credits: 4, status: "Completed", grade: "A", rating: 4, semester: "Sem 5" },
-    { name: "Computer Vision", code: "21CSE454T", credits: 3, status: "Ongoing", grade: "—", rating: null, semester: "Sem 6" },
-    { name: "Cloud Computing", code: "21CSE362T", credits: 3, status: "Completed", grade: "B+", rating: 3, semester: "Sem 5" },
-  ];
+  const [electives, setElectives] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ course_id: "", status: "ongoing", grade: "-", rating: "" });
+
+  const loadElectives = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [fetchedElectives, fetchedCourses] = await Promise.all([
+        apiRequest("/api/electives"),
+        apiRequest("/api/courses")
+      ]);
+      setElectives(Array.isArray(fetchedElectives) ? fetchedElectives : []);
+      setAllCourses(Array.isArray(fetchedCourses) ? fetchedCourses.map((c) => normalizeCourseForUi(c)).filter(Boolean) : []);
+    } catch (e) {
+      if (e?.status === 401) {
+        setError("Session expired. Please sign in again.");
+        setPage("login");
+        return;
+      }
+      setError(e.message || "Unable to load electives.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadElectives();
+  }, []);
+
+  const byId = allCourses.reduce((acc, c) => {
+    acc[c.id] = c;
+    acc[c.code] = c;
+    return acc;
+  }, {});
+
+  const entries = electives.map((e) => {
+    const c = byId[e.course_id] || {};
+    return {
+      ...e,
+      name: c.name || e.course_id,
+      code: c.code || e.course_id,
+      credits: c.credits || 0,
+      status: String(e.status || "ongoing").toLowerCase()
+    };
+  });
+
+  const completed = entries.filter((e) => e.status === "completed");
+  const ongoing = entries.filter((e) => e.status === "ongoing");
+  const credits = completed.reduce((sum, e) => sum + Number(e.credits || 0), 0);
+
+  const addElective = async () => {
+    if (!form.course_id) return;
+    setError("");
+    try {
+      await apiRequest("/api/electives", {
+        method: "POST",
+        body: JSON.stringify({
+          course_id: form.course_id,
+          status: form.status,
+          grade: form.grade,
+          rating: form.rating ? Number(form.rating) : null
+        })
+      });
+      setShowAdd(false);
+      setForm({ course_id: "", status: "ongoing", grade: "-", rating: "" });
+      loadElectives();
+    } catch (e) {
+      setError(e.message || "Unable to add elective.");
+    }
+  };
 
   return (
     <div>
       <TopBar title="My Electives" setPage={setPage} {...topBarProps} />
       <div style={{ padding: "36px 40px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div className="section-label">TRACK YOUR COURSE HISTORY</div>
+          <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Elective</button>
+        </div>
+
+        {error && <div style={{ marginBottom: 14, color: "#ff9d9d", fontSize: 13 }}>{error}</div>}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
-          {[["10", "Credits Earned"], ["2", "Completed"], ["1", "Ongoing"]].map(([v, l]) => (
+          {[[String(credits), "Credits Earned"], [String(completed.length), "Completed"], [String(ongoing.length), "Ongoing"]].map(([v, l]) => (
             <div key={l} className="card" style={{ padding: "20px 24px" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 700, color: "var(--teal)" }}>{v}</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>{l}</div>
@@ -1629,29 +1922,30 @@ const MyElectivesPage = ({ setPage, topBarProps = {}, recommendationHistory = []
 
         <div className="section-label" style={{ marginBottom: 16 }}>ELECTIVE HISTORY</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {electives.map(e => (
+          {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading electives...</div>}
+          {!loading && entries.length === 0 && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>No electives added yet. Use Add Elective to start your history.</div>}
+          {!loading && entries.map(e => (
             <div key={e.code} className="card" style={{ padding: "22px 24px", display: "flex", gap: 20, alignItems: "center" }}>
               <div style={{
                 width: 48, height: 48, borderRadius: 12,
-                background: e.status === "Completed" ? "rgba(0,200,100,0.1)" : "var(--teal-dim)",
-                border: `1px solid ${e.status === "Completed" ? "rgba(0,200,100,0.3)" : "var(--border-teal)"}`,
+                background: e.status === "completed" ? "rgba(0,200,100,0.1)" : "var(--teal-dim)",
+                border: `1px solid ${e.status === "completed" ? "rgba(0,200,100,0.3)" : "var(--border-teal)"}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 18
-              }}>{e.status === "Completed" ? "✓" : "⏳"}</div>
+              }}>{e.status === "completed" ? "✓" : "⏳"}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 600, marginBottom: 4 }}>{e.name}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <span className="tag">{e.code}</span>
                   <span className="tag">{e.credits} Credits</span>
-                  <span className="tag">{e.semester}</span>
-                  <span className={`tag ${e.status === "Completed" ? "success" : "teal"}`}>{e.status}</span>
+                  <span className={`tag ${e.status === "completed" ? "success" : "teal"}`}>{e.status}</span>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "var(--teal)" }}>{e.grade}</div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "var(--teal)" }}>{e.grade || "-"}</div>
                 <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>GRADE</div>
               </div>
-              {e.rating && <Stars rating={e.rating} />}
+              {e.rating ? <Stars rating={Number(e.rating)} /> : null}
             </div>
           ))}
         </div>
@@ -1673,6 +1967,32 @@ const MyElectivesPage = ({ setPage, topBarProps = {}, recommendationHistory = []
           </div>
         </div>
       </div>
+
+      {showAdd && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(6px)" }}>
+          <div className="card" style={{ width: 560, padding: 30, animation: "fadeUp 0.3s ease" }}>
+            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Add Elective</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <select value={form.course_id} onChange={(e) => setForm((prev) => ({ ...prev, course_id: e.target.value }))} style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-secondary)", fontSize: 14 }}>
+                <option value="">Select Course</option>
+                {allCourses.map((c) => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+              </select>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <select value={form.status} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))} style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-secondary)", fontSize: 14 }}>
+                  <option value="ongoing">Ongoing</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <input value={form.grade} onChange={(e) => setForm((prev) => ({ ...prev, grade: e.target.value }))} placeholder="Grade" style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
+              </div>
+              <input value={form.rating} onChange={(e) => setForm((prev) => ({ ...prev, rating: e.target.value }))} placeholder="Rating (optional, 1-5)" style={{ padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-primary)", fontSize: 14, outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 22 }}>
+              <button className="btn-ghost" onClick={() => setShowAdd(false)}>Cancel</button>
+              <button className="btn-primary" onClick={addElective}>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1689,7 +2009,6 @@ const ProfilePage = ({ setPage, userData, onUserUpdate, topBarProps = {} }) => {
     roll_no: "",
     department: "",
     batch: "",
-    semester: "",
     advisor: "",
     interests: ""
   });
@@ -1705,7 +2024,6 @@ const ProfilePage = ({ setPage, userData, onUserUpdate, topBarProps = {} }) => {
       roll_no: userData?.roll_no || "",
       department: userData?.department || "Computer Science & Engineering",
       batch: userData?.batch || "2021-2025",
-      semester: userData?.semester || "Sem 6",
       advisor: userData?.advisor || "",
       interests: interests.join(", ")
     });
@@ -1724,7 +2042,6 @@ const ProfilePage = ({ setPage, userData, onUserUpdate, topBarProps = {} }) => {
         roll_no: form.roll_no,
         department: form.department,
         batch: form.batch,
-        semester: form.semester,
         advisor: form.advisor,
         interests: form.interests
           .split(",")
@@ -1766,7 +2083,6 @@ const ProfilePage = ({ setPage, userData, onUserUpdate, topBarProps = {} }) => {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, marginBottom: 4 }}>{form.name || "Student"}</h2>
             <div style={{ display: "flex", gap: 10 }}>
               <span className="tag">{form.department || "Department"}</span>
-              <span className="tag">{form.semester || "Semester"}</span>
               <span className="tag teal">{form.batch || "Batch"}</span>
             </div>
           </div>

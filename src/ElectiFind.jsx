@@ -52,12 +52,10 @@ export default function App() {
   const [compareCourses, setCompareCourses] = useState(courses);
   const [compareSelection, setCompareSelection] = useState([]);
   const [recommendationHistory, setRecommendationHistory] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [questionnaireStatus, setQuestionnaireStatus] = useState(null);
   const [loadingData, setLoadingData] = useState(false);
 
   const isDashboard = DASHBOARD_PAGES.includes(page);
@@ -87,11 +85,12 @@ export default function App() {
       const compareQuery = compareSelection.length
         ? `/api/compare?courses=${encodeURIComponent(compareSelection.join(","))}`
         : "/api/compare";
-      const [dashboard, recs, compare, history] = await Promise.all([
+      const [dashboard, recs, compare, history, qStatus] = await Promise.all([
         apiRequest("/api/dashboard"),
         apiRequest("/api/recommendations"),
         apiRequest(compareQuery),
-        apiRequest("/api/recommendations/history")
+        apiRequest("/api/recommendations/history"),
+        apiRequest("/api/questionnaire/status")
       ]);
 
       const mappedDashboardCourses = (dashboard?.recommendations || [])
@@ -114,6 +113,7 @@ export default function App() {
       if (mappedCompareCourses.length) setCompareCourses(mappedCompareCourses);
       setRecommendationHistory(Array.isArray(history) ? history : []);
       setDashboardStats(dashboard?.stats || null);
+      setQuestionnaireStatus(qStatus || null);
     } catch {
       // Keep fallback data when API calls fail.
     } finally {
@@ -161,26 +161,6 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("electifind_token");
-    if (!token || searchQuery.trim().length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const t = setTimeout(async () => {
-      setSearchLoading(true);
-      try {
-        const results = await apiRequest(`/api/courses/search?q=${encodeURIComponent(searchQuery.trim())}`);
-        setSearchResults(Array.isArray(results) ? results : []);
-      } catch {
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 250);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
   const setPageGuarded = (nextPage) => {
     if (DASHBOARD_PAGES.includes(nextPage) && !localStorage.getItem("electifind_token")) {
       navigate(PAGE_TO_PATH.login);
@@ -191,19 +171,11 @@ export default function App() {
   };
 
   const topBarProps = {
-    searchValue: searchQuery,
-    onSearchChange: setSearchQuery,
-    onSearchSubmit: () => setPageGuarded("recommendations"),
-    searchResults,
-    searchLoading,
-    onSearchSelect: (course) => {
-      const normalized = normalizeCourseForUi(course);
-      if (normalized) {
-        setActiveCourse(normalized);
-        setSearchQuery("");
-        setSearchResults([]);
-        setPageGuarded("course-detail");
-      }
+    onLogout: () => {
+      localStorage.removeItem("electifind_token");
+      setUser(null);
+      setQuestionnaireStatus(null);
+      setPage("login");
     },
     showMenuButton: isMobile,
     onToggleMenu: () => setSidebarOpen((v) => !v)
@@ -213,8 +185,8 @@ export default function App() {
     switch (page) {
       case "landing": return <LandingPage setPage={setPageGuarded} />;
       case "login": return <AuthPage setPage={setPageGuarded} onAuthSuccess={(u) => { setUser(u); loadDashboardBundle(); }} />;
-      case "dashboard": return <DashboardPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} coursesData={dashboardCourses} statsData={dashboardStats} loading={loadingData} topBarProps={topBarProps} onAddCompare={addCompareCourse} />;
-      case "questionnaire": return <QuestionnairePage setPage={setPageGuarded} topBarProps={topBarProps} />;
+      case "dashboard": return <DashboardPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} coursesData={dashboardCourses} statsData={dashboardStats} loading={loadingData} topBarProps={topBarProps} onAddCompare={addCompareCourse} userName={user?.name || "Student"} questionnaireStatus={questionnaireStatus} />;
+      case "questionnaire": return <QuestionnairePage setPage={setPageGuarded} topBarProps={topBarProps} recommendationHistory={recommendationHistory} onSubmitted={loadDashboardBundle} />;
       case "recommendations": return <RecommendationsPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} recommendationsData={recommendationCourses} loading={loadingData} topBarProps={topBarProps} onAddCompare={addCompareCourse} />;
       case "compare": return <ComparePage setPage={setPageGuarded} coursesData={compareCourses} loading={loadingData} topBarProps={topBarProps} onRemoveCompare={removeCompareCourse} onClearCompare={() => setCompareSelection([])} />;
       case "community": return <CommunityPage setPage={setPageGuarded} topBarProps={topBarProps} />;

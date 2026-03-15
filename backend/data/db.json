@@ -1,9 +1,971 @@
 {
-  "users": [],
-  "questionnaires": [],
-  "recommendations": [],
-  "enrollments": [],
+  "users": [
+    {
+      "id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "name": "Flow User",
+      "email": "flow-1773603435241@electifind.local",
+      "password_hash": "$2b$10$XRtSaw.jnZP7ve9iTrGtfuxWi/LzBuag.ODssBe.HYqmPQgv47NPy",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "semester": "Sem 6",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T19:37:15.332Z"
+    },
+    {
+      "id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "name": "Sarvagna",
+      "email": "sarvagna",
+      "password_hash": "$2b$10$QlWalkh8dASn.MGOPWsqQ.cqkUZ3BsPmigNi5Me4gNcZkdwk4loh.",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "semester": "Sem 6",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T19:38:53.276Z"
+    },
+    {
+      "id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "name": "Flow User",
+      "email": "flow-1773603954602@electifind.local",
+      "password_hash": "$2b$10$tP5U2lCt5AEDqYI6oS8y8ubyRfB3lo4DukBLEapoCK.gq29WqI7PS",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "semester": "Sem 6",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T19:45:54.681Z"
+    },
+    {
+      "id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "name": "Flow User",
+      "email": "flow-1773604435312@electifind.local",
+      "password_hash": "$2b$10$4T0VxCegmNDs1SqPWp6QreAhA7GQ40TO1rTHeCwR4zelIp2aZM19i",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T19:53:55.407Z"
+    },
+    {
+      "id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "name": "Flow User",
+      "email": "flow-1773604449064@electifind.local",
+      "password_hash": "$2b$10$P9sssy050bxJZkZjL78AXOYOUKPRIyL4SG0ReulNTQNNX7j0wnzHK",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T19:54:09.148Z"
+    },
+    {
+      "id": "0b48a972-37d4-4c4b-bbb9-377cc286fd0c",
+      "name": "Debug User",
+      "email": "debug.1773604945@local.test",
+      "password_hash": "$2b$10$3AghPYeB59MRQfj0pcmGbe6KZj7YvTmgFZNN38CIpYCCvmot7hsj2",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "semester": "Sem 6",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T20:02:25.364Z"
+    },
+    {
+      "id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "name": "Flow User",
+      "email": "flow-1773604984968@electifind.local",
+      "password_hash": "$2b$10$HcTwBlFjizkwE32lIvMoOuSmEkBtOLilcJunco5f4Mzit2YFqFWYq",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T20:03:05.045Z"
+    },
+    {
+      "id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "name": "Flow User",
+      "email": "flow-1773605247675@electifind.local",
+      "password_hash": "$2b$10$3cbk0YX.73xD7TMaU/.CR./3PcmwjIEhZxluy5V3S3F9p1LKUj/Hm",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T20:07:27.765Z"
+    },
+    {
+      "id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "name": "Flow User",
+      "email": "flow-1773606022694@electifind.local",
+      "password_hash": "$2b$10$wxdmct7/Yorap2/ipm7K9OZzT8bofdZdkirqXuqh5Imy5WG2SxaJa",
+      "roll_no": "",
+      "department": "Computer Science & Engineering",
+      "batch": "2021-2025",
+      "advisor": "",
+      "interests": [],
+      "created_at": "2026-03-15T20:20:22.779Z"
+    }
+  ],
+  "questionnaires": [
+    {
+      "id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T19:37:15.343Z",
+      "updated_at": "2026-03-15T19:37:15.343Z"
+    },
+    {
+      "id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "version": "v1",
+      "responses_json": {
+        "1": "Algorithms & Theory",
+        "2": 5,
+        "3": "Product Manager",
+        "4": {
+          "Python / Coding": 3,
+          "Statistics / Math": 2,
+          "System Design": 3,
+          "Communication": 4
+        },
+        "5": "Build a portfolio-worthy project"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T19:39:29.801Z",
+      "updated_at": "2026-03-15T19:39:29.801Z"
+    },
+    {
+      "id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T19:45:54.691Z",
+      "updated_at": "2026-03-15T19:45:54.691Z"
+    },
+    {
+      "id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T19:53:55.414Z",
+      "updated_at": "2026-03-15T19:53:55.414Z"
+    },
+    {
+      "id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T19:54:09.155Z",
+      "updated_at": "2026-03-15T19:54:09.155Z"
+    },
+    {
+      "id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T20:03:05.053Z",
+      "updated_at": "2026-03-15T20:03:05.053Z"
+    },
+    {
+      "id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T20:07:27.773Z",
+      "updated_at": "2026-03-15T20:07:27.773Z"
+    },
+    {
+      "id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "version": "v1",
+      "responses_json": {
+        "1": "Data Science",
+        "2": 4,
+        "3": "Data Scientist",
+        "4": {
+          "python": 4,
+          "statistics": 4,
+          "systems": 3,
+          "communication": 4
+        },
+        "5": "challenging"
+      },
+      "completed": true,
+      "step": 5,
+      "created_at": "2026-03-15T20:20:22.788Z",
+      "updated_at": "2026-03-15T20:20:22.788Z"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "d9e90d34-792c-4442-8dbf-8844cf99b47a",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "questionnaire_id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:37:15.344Z"
+    },
+    {
+      "id": "c07d2f93-0cf4-43ac-ba25-1cced236c914",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "questionnaire_id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:37:15.344Z"
+    },
+    {
+      "id": "b2971e0a-d9ab-4e3a-9944-cc0024e4b3c7",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "questionnaire_id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:37:15.345Z"
+    },
+    {
+      "id": "188e378c-2924-4734-90e2-90283008f57c",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "questionnaire_id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "course_id": "21CSE375T",
+      "match_score": 84,
+      "score_breakdown": {
+        "interestAlignment": 86,
+        "careerRelevance": 78,
+        "skillCompatibility": 86,
+        "workloadFit": 76,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Computational Neuroscience scored 84% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:39:29.804Z"
+    },
+    {
+      "id": "e6448f85-7866-4985-8321-a106c79a7a22",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "questionnaire_id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "course_id": "21CSE234T",
+      "match_score": 83,
+      "score_breakdown": {
+        "interestAlignment": 86,
+        "careerRelevance": 78,
+        "skillCompatibility": 86,
+        "workloadFit": 60,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Principles Of Cryptography scored 83% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:39:29.802Z"
+    },
+    {
+      "id": "857d9282-7247-470f-8594-a3249def6a0f",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "questionnaire_id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "course_id": "21CSE357T",
+      "match_score": 83,
+      "score_breakdown": {
+        "interestAlignment": 86,
+        "careerRelevance": 78,
+        "skillCompatibility": 86,
+        "workloadFit": 60,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Distributed Computing scored 83% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:39:29.804Z"
+    },
+    {
+      "id": "6a6db83f-a19e-4cd9-a936-cef3d3a6d48f",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "questionnaire_id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:45:54.692Z"
+    },
+    {
+      "id": "f1bccefd-aff4-4734-a330-1ff06ff117e7",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "questionnaire_id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:45:54.692Z"
+    },
+    {
+      "id": "1671c100-6ace-43da-99bc-3e5c56f4df36",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "questionnaire_id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:45:54.693Z"
+    },
+    {
+      "id": "f4e9772b-27ed-4a43-b548-6e81da4a00ad",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "questionnaire_id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:53:55.415Z"
+    },
+    {
+      "id": "7f0013cb-421b-406e-972e-cccfeae1334b",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "questionnaire_id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:53:55.415Z"
+    },
+    {
+      "id": "dfdaabbf-fb00-4ad8-a54b-1028713fbd76",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "questionnaire_id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:53:55.415Z"
+    },
+    {
+      "id": "60bd8e04-8757-4fa5-9d52-6123089c6a32",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "questionnaire_id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:54:09.155Z"
+    },
+    {
+      "id": "d2f88fd9-472d-4b55-89c7-2c55de3fdf45",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "questionnaire_id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:54:09.155Z"
+    },
+    {
+      "id": "768f9ba1-d923-4576-bc8f-1c73c897cb79",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "questionnaire_id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T19:54:09.156Z"
+    },
+    {
+      "id": "0d98e0d4-8615-45df-a40e-dc3c1809f5b9",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "questionnaire_id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:03:05.054Z"
+    },
+    {
+      "id": "6341050d-4627-43b5-aff7-4b396d286c92",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "questionnaire_id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:03:05.054Z"
+    },
+    {
+      "id": "5811343b-9e2c-429a-825c-c54e2544af20",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "questionnaire_id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:03:05.054Z"
+    },
+    {
+      "id": "7e924926-59d5-490f-be89-922972431ba0",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "questionnaire_id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:07:27.775Z"
+    },
+    {
+      "id": "75b92cba-800d-4e86-890a-898d87198ccf",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "questionnaire_id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:07:27.775Z"
+    },
+    {
+      "id": "29cf5e86-e818-4d91-aefe-0bd1dc6ccc14",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "questionnaire_id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:07:27.777Z"
+    },
+    {
+      "id": "1a899d7b-e2e0-4faa-8a53-c90a33ab6c66",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "questionnaire_id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "course_id": "21CSE312P",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 84,
+        "seatAvailability": 96,
+        "peerSignal": 84
+      },
+      "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:20:22.789Z"
+    },
+    {
+      "id": "2f138d2c-d829-4e35-8861-4679bddd13ac",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "questionnaire_id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "course_id": "21CSE333T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:20:22.789Z"
+    },
+    {
+      "id": "3e107ba1-e14d-42f3-b97b-865b0318a1f3",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "questionnaire_id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "course_id": "21CSE424T",
+      "match_score": 92,
+      "score_breakdown": {
+        "interestAlignment": 95,
+        "careerRelevance": 92,
+        "skillCompatibility": 92,
+        "workloadFit": 78,
+        "seatAvailability": 100,
+        "peerSignal": 84
+      },
+      "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals.",
+      "created_at": "2026-03-15T20:20:22.789Z"
+    }
+  ],
+  "enrollments": [
+    {
+      "id": "1903c7a8-5b67-4308-b7b2-51728ed86451",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "course_id": "21CSE358T",
+      "semester": "Sem 6",
+      "status": "completed",
+      "grade": "—",
+      "rating": null,
+      "created_at": "2026-03-15T19:39:51.340Z"
+    }
+  ],
   "posts": [],
   "replies": [],
-  "passwordResetRequests": []
+  "passwordResetRequests": [],
+  "recommendationHistory": [
+    {
+      "id": "420e5dae-0c0b-4146-a27e-294444fd4dad",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "questionnaire_id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "created_at": "2026-03-15T19:37:15.345Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "bba1fa5a-ff7a-41e9-b0cf-63892ab91bad",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "questionnaire_id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "created_at": "2026-03-15T19:39:29.806Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE375T",
+          "match_score": 84,
+          "explanation": "Computational Neuroscience scored 84% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE234T",
+          "match_score": 83,
+          "explanation": "Principles Of Cryptography scored 83% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE357T",
+          "match_score": 83,
+          "explanation": "Distributed Computing scored 83% based on strong seat availability, interest alignment, skill compatibility. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "68ae5889-995c-470d-9f39-69dda2d8fa32",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "questionnaire_id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "created_at": "2026-03-15T19:45:54.693Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "f5e739ac-8caf-409a-91cb-2c57d91fe3bc",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "questionnaire_id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "created_at": "2026-03-15T19:53:55.416Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "27833239-ee31-48e1-ba58-c89d164140eb",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "questionnaire_id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "created_at": "2026-03-15T19:54:09.156Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "c779875b-7d4f-4672-add4-8ba43ef8c210",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "questionnaire_id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "created_at": "2026-03-15T20:03:05.055Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "97c8e2e5-96af-433d-84eb-2de067221d07",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "questionnaire_id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "created_at": "2026-03-15T20:07:27.777Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    },
+    {
+      "id": "12eef5cf-abd6-4da4-9282-1b1a7b9ce61d",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "questionnaire_id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "created_at": "2026-03-15T20:20:22.790Z",
+      "recommendations": [
+        {
+          "course_id": "21CSE312P",
+          "match_score": 92,
+          "explanation": "Software Engineering in Artificial Intelligence scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE333T",
+          "match_score": 92,
+          "explanation": "AI and Blockchain scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        },
+        {
+          "course_id": "21CSE424T",
+          "match_score": 92,
+          "explanation": "Deep Learning for Data Analytics scored 92% based on strong seat availability, interest alignment, career relevance. This ranking combines questionnaire fit with seat pressure and peer signals."
+        }
+      ]
+    }
+  ],
+  "mlflowRuns": [
+    {
+      "id": "eed91788-c5ab-48d9-bfc9-8c7fdd53efdd",
+      "user_id": "054cb8f2-755c-4669-8218-6aad380134a5",
+      "questionnaire_id": "18322688-820f-48d9-8cde-96a579731b7b",
+      "created_at": "2026-03-15T19:37:15.345Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "3fa208f5-8a35-4a1c-926d-e830ff6f09db",
+      "user_id": "89238c0c-c2a7-4e3f-b160-388847bd50fb",
+      "questionnaire_id": "6bbcbb84-7736-441c-9507-9ded70d4913c",
+      "created_at": "2026-03-15T19:39:29.806Z",
+      "top_score": 84,
+      "avg_score": 83,
+      "tracked": false
+    },
+    {
+      "id": "3822a92b-458e-45ff-ae93-acb12651a535",
+      "user_id": "b412ede4-853b-4d7b-a90b-c6de29e3f569",
+      "questionnaire_id": "bcfc1294-620c-4bd6-91fd-8f7c13686419",
+      "created_at": "2026-03-15T19:45:54.693Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "6c4e15d9-50a9-4640-b3dd-e97d887d4209",
+      "user_id": "3a8f9dfa-46a8-457d-be32-20c045398706",
+      "questionnaire_id": "90e62e1d-81b6-4793-a488-ae9daedd6d68",
+      "created_at": "2026-03-15T19:53:55.416Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "75bea223-936d-4f67-929a-4c59f6c8c1e2",
+      "user_id": "1513e6e5-50d5-406b-8267-39265a2b0649",
+      "questionnaire_id": "8ad5c2aa-3477-4dd0-9805-4dff740124df",
+      "created_at": "2026-03-15T19:54:09.156Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "69bdda61-14bf-4537-8d52-27dff1f9b45e",
+      "user_id": "f811583c-7cbf-4738-b7da-c9a1ee4bc5b1",
+      "questionnaire_id": "5d02523c-d045-40e2-a3d3-697731c69cda",
+      "created_at": "2026-03-15T20:03:05.055Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "f1d03df5-04f0-4c00-9adb-690337b4fc5b",
+      "user_id": "643db9c0-bab2-4f9e-bdd5-cf6b7e0e11bd",
+      "questionnaire_id": "bf8cfa31-f06f-4663-9aaf-7530291c13ca",
+      "created_at": "2026-03-15T20:07:27.777Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    },
+    {
+      "id": "aee52acc-6fc6-49ec-8257-3d895569e8e3",
+      "user_id": "b1b43650-7425-4879-aa36-451b6d947599",
+      "questionnaire_id": "1b8de880-c417-4aad-987c-eac6d5333e6b",
+      "created_at": "2026-03-15T20:20:22.790Z",
+      "top_score": 92,
+      "avg_score": 92,
+      "tracked": false
+    }
+  ]
 }

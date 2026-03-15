@@ -4,22 +4,21 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { TopBar } from "./index.jsx";
 
 describe("TopBar", () => {
-  it("fires search change callback", () => {
-    const onSearchChange = vi.fn();
+  it("opens profile menu and fires logout", () => {
+    const onLogout = vi.fn();
 
     render(
       <TopBar
         title="Dashboard"
         setPage={() => {}}
-        searchValue=""
-        onSearchChange={onSearchChange}
+        onLogout={onLogout}
       />
     );
 
-    const input = screen.getByPlaceholderText("Search courses...");
-    fireEvent.change(input, { target: { value: "cloud" } });
+    fireEvent.click(screen.getByText("SN"));
+    fireEvent.click(screen.getByText("Logout"));
 
-    expect(onSearchChange).toHaveBeenCalledWith("cloud");
+    expect(onLogout).toHaveBeenCalledTimes(1);
   });
 
   it("renders mobile menu button when enabled", () => {
