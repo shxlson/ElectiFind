@@ -146,15 +146,15 @@
 |----|-------|------|----------|--------|----------|--------|-------|
 | 7.1 | Design course dataset schema (code, name, credits, difficulty, professor, tags, seats, rating) | Task | Member 3 | 5 | Highest | 🔶 PARTIAL | Professional electives are now mapped from syllabus in frontend sample dataset; DB schema still pending |
 | 7.2 | Seed/populate course database with sample data | Task | Member 2 | 3 | Highest | ✅ DONE | Backend now loads full dataset from `electives_dataset.json` (188 courses) |
-| 7.3 | Build recommendation algorithm (content-based / hybrid filtering) | Task | Member 3 | 13 | Highest | ❌ PENDING | |
-| 7.4 | Implement match score calculation (0-100%) | Task | Member 3 | 8 | Highest | ❌ PENDING | Fake scores (96, 88, 81) hardcoded |
-| 7.5 | Integrate seat availability into scoring | Task | Member 3 | 5 | High | ❌ PENDING | Seat data hardcoded |
-| 7.6 | Build "Why Recommended?" explainability module | Task | Member 3 | 8 | High | ❌ PENDING | Static explanation text exists in UI |
+| 7.3 | Build recommendation algorithm (content-based / hybrid filtering) | Task | Member 3 | 13 | Highest | ✅ DONE | Hybrid scoring implemented in backend recommendation engine |
+| 7.4 | Implement match score calculation (0-100%) | Task | Member 3 | 8 | Highest | ✅ DONE | Weighted 0-100 scoring with normalized breakdown implemented |
+| 7.5 | Integrate seat availability into scoring | Task | Member 3 | 5 | High | ✅ DONE | Seat availability now contributes explicit score component |
+| 7.6 | Build "Why Recommended?" explainability module | Task | Member 3 | 8 | High | ✅ DONE | Explainability text + component-wise score breakdown implemented |
 | 7.7 | Build recommendation API (`GET /api/recommendations`) | Task | Member 2 | 5 | Highest | ✅ DONE | Endpoint implemented and returns scored recommendations with course payload |
 | 7.8 | Track & store recommendation history per user | Task | Member 2 | 3 | Medium | ❌ PENDING | |
 | 7.9 | MLflow model tracking integration | Task | Member 3 | 5 | Medium | ❌ PENDING | |
 
-**Epic Subtotal:** 55 pts | **Done:** 8 | **Partial:** 5 | **Pending:** 42
+**Epic Subtotal:** 55 pts | **Done:** 42 | **Partial:** 5 | **Pending:** 8
 
 ---
 
@@ -378,10 +378,10 @@
 
 | Task ID | Title | Assignee | Status |
 |---------|-------|----------|--------|
-| 7.3 | Recommendation algorithm | Member 3 | ❌ PENDING |
-| 7.4 | Match score calculation | Member 3 | ❌ PENDING |
-| 7.5 | Seat availability scoring | Member 3 | ❌ PENDING |
-| 7.6 | Explainability module | Member 3 | ❌ PENDING |
+| 7.3 | Recommendation algorithm | Member 3 | ✅ DONE |
+| 7.4 | Match score calculation | Member 3 | ✅ DONE |
+| 7.5 | Seat availability scoring | Member 3 | ✅ DONE |
+| 7.6 | Explainability module | Member 3 | ✅ DONE |
 | 7.7 | Recommendations API | Member 2 | ✅ DONE |
 | 8.1 | View top 3 matches | Member 1 | ✅ DONE |
 | 8.2 | Recommendation card UI | Member 1 | ✅ DONE |
@@ -399,7 +399,7 @@
 | 10.1-10.6 | Course detail page (all tabs) | Member 1 | ✅ DONE |
 | 10.7 | Course detail API | Member 2 | ✅ DONE |
 
-**Sprint 3 Status: 16/20 done, 4 pending**
+**Sprint 3 Status: 20/20 done, 0 pending**
 
 ---
 
@@ -475,12 +475,12 @@
 
 | Metric | Value |
 |--------|-------|
-| Done | 287 pts |
+| Done | 321 pts |
 | Partial | 51 pts |
-| Pending | 124 pts |
+| Pending | 90 pts |
 | Total Planned | 462 pts |
 
-**Overall: ~62% done, ~11% partial, ~27% pending (based on all epic subtotals above).**
+**Overall: ~69% done, ~11% partial, ~19% pending (based on all epic subtotals above).**
 
 ---
 

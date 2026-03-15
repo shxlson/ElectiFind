@@ -68,48 +68,140 @@ function seatsLeft(course) {
 }
 
 function seatScore(course) {
+  if (!course?.seats_total) return 0;
   return Math.round((seatsLeft(course) / course.seats_total) * 100);
 }
 
-function scoreCourse(course, questionnaire) {
-  const responses = questionnaire?.responses_json || {};
-  let score = 55;
+function clampScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
 
+function contentAlignmentScore(course, focus) {
+  if (!focus) return 55;
+  if (focus.includes("data") && course.tags.includes("ml")) return 95;
+  if (focus.includes("systems") && (course.tags.includes("systems") || course.tags.includes("cloud") || course.tags.includes("backend"))) return 90;
+  if (focus.includes("security") && (course.tags.includes("security") || course.tags.includes("crypto"))) return 92;
+  if (focus.includes("design") && (course.tags.includes("frontend") || course.tags.includes("hci"))) return 88;
+  if (focus.includes("theory") && course.tags.includes("algorithms")) return 86;
+  return 60;
+}
+
+function careerAlignmentScore(course, career) {
+  if (!career) return 55;
+  if (career.includes("data") && course.tags.includes("ml")) return 92;
+  if (career.includes("software") && (course.tags.includes("backend") || course.tags.includes("web") || course.tags.includes("cloud"))) return 86;
+  if (career.includes("research") && (course.tags.includes("ml") || course.tags.includes("systems") || course.tags.includes("security"))) return 84;
+  if (career.includes("product") && (course.tags.includes("frontend") || course.tags.includes("hci") || course.tags.includes("systems"))) return 78;
+  return 58;
+}
+
+function skillCompatibilityScore(course, mathComfort, skillAverage) {
+  const base = 52 + (skillAverage * 8);
+  let modifier = 0;
+  if (course.tags.includes("ml") || course.tags.includes("crypto")) {
+    modifier += mathComfort >= 4 ? 10 : mathComfort <= 2 ? -12 : 0;
+  }
+  if (course.tags.includes("frontend") || course.tags.includes("hci")) {
+    modifier += mathComfort <= 2 ? 6 : 0;
+  }
+  return clampScore(base + modifier);
+}
+
+function workloadFitScore(course, scenarioChoice) {
+  const weekly = Number(course.weekly_hours || 8);
+  const normalized = clampScore(100 - Math.max(0, (weekly - 4) * 8));
+  if (!scenarioChoice) return normalized;
+  const scenario = String(scenarioChoice).toLowerCase();
+  if (scenario.includes("manageable") || scenario.includes("gpa")) {
+    return clampScore(normalized + (weekly <= 8 ? 10 : -10));
+  }
+  if (scenario.includes("challenging") || scenario.includes("deep")) {
+    return clampScore(normalized + (weekly >= 8 ? 10 : -8));
+  }
+  return normalized;
+}
+
+function popularityScore(course, db) {
+  const enrollments = db.enrollments.filter((e) => String(e.course_id) === String(course.id) || String(e.course_id) === String(course.code));
+  const reviews = enrollments.filter((e) => Number.isFinite(Number(e.rating))).map((e) => Number(e.rating));
+  const avgRating = reviews.length ? reviews.reduce((a, b) => a + b, 0) / reviews.length : Number(course.rating || 4.2);
+  const posts = db.posts.filter((p) => String(p.course_id) === String(course.id) || String(p.course_id) === String(course.code));
+  const upvotes = posts.reduce((sum, p) => sum + Number(p.upvotes || 0), 0);
+  const socialLift = Math.min(20, upvotes / 5);
+  const ratingComponent = clampScore((avgRating / 5) * 100);
+  return clampScore(ratingComponent + socialLift);
+}
+
+function buildScoreBreakdown(course, questionnaire, db) {
+  const responses = questionnaire?.responses_json || {};
   const focus = String(responses[1] || "").toLowerCase();
   const career = String(responses[3] || "").toLowerCase();
   const mathComfort = Number(responses[2] || 3);
+  const skills = responses[4] && typeof responses[4] === "object"
+    ? Object.values(responses[4]).map((v) => Number(v)).filter((v) => Number.isFinite(v))
+    : [];
+  const skillAverage = skills.length ? skills.reduce((a, b) => a + b, 0) / skills.length : 3;
+  const scenarioChoice = responses[5] || "";
 
-  if (focus.includes("data") && course.tags.includes("ml")) score += 18;
-  if (focus.includes("systems") && (course.tags.includes("systems") || course.tags.includes("cloud"))) score += 15;
-  if (focus.includes("security") && course.tags.includes("security")) score += 18;
-  if (focus.includes("design") && course.tags.includes("frontend")) score += 12;
+  const content = contentAlignmentScore(course, focus);
+  const careerFit = careerAlignmentScore(course, career);
+  const skillsFit = skillCompatibilityScore(course, mathComfort, skillAverage);
+  const workload = workloadFitScore(course, scenarioChoice);
+  const seats = seatScore(course);
+  const popularity = popularityScore(course, db);
 
-  if (career.includes("data") && course.tags.includes("ml")) score += 10;
-  if (career.includes("software") && (course.tags.includes("web") || course.tags.includes("backend"))) score += 8;
+  const matchScore = clampScore(
+    content * 0.34 +
+    careerFit * 0.2 +
+    skillsFit * 0.16 +
+    workload * 0.12 +
+    seats * 0.1 +
+    popularity * 0.08
+  );
 
-  if (mathComfort >= 4 && (course.tags.includes("ml") || course.tags.includes("crypto"))) score += 6;
-  if (mathComfort <= 2 && course.tags.includes("crypto")) score -= 8;
-
-  score += Math.round(seatScore(course) * 0.15);
-  score += Math.round(course.rating * 2);
-
-  if (score > 99) score = 99;
-  if (score < 1) score = 1;
-
-  return score;
+  return {
+    matchScore,
+    breakdown: {
+      interestAlignment: content,
+      careerRelevance: careerFit,
+      skillCompatibility: skillsFit,
+      workloadFit: workload,
+      seatAvailability: seats,
+      peerSignal: popularity
+    }
+  };
 }
 
-function buildRecommendations(userId, questionnaire) {
+function buildExplainabilityText(course, scorePayload) {
+  const b = scorePayload.breakdown;
+  const strengths = [
+    ["interest alignment", b.interestAlignment],
+    ["career relevance", b.careerRelevance],
+    ["skill compatibility", b.skillCompatibility],
+    ["workload fit", b.workloadFit],
+    ["seat availability", b.seatAvailability],
+    ["peer signal", b.peerSignal]
+  ]
+    .sort((a, b2) => b2[1] - a[1])
+    .slice(0, 3)
+    .map(([label]) => label);
+
+  return `${course.name} scored ${scorePayload.matchScore}% based on strong ${strengths.join(", ")}. This ranking combines questionnaire fit with seat pressure and peer signals.`;
+}
+
+function buildRecommendations(userId, questionnaire, db) {
   const ranked = COURSES
     .map((course) => {
-      const match_score = scoreCourse(course, questionnaire);
+      const scorePayload = buildScoreBreakdown(course, questionnaire, db);
       return {
         id: randomUUID(),
         user_id: userId,
         questionnaire_id: questionnaire?.id || null,
         course_id: course.id,
-        match_score,
-        explanation: `${course.name} aligns with your selected focus and workload preferences while accounting for current seat availability.`,
+        match_score: scorePayload.matchScore,
+        score_breakdown: scorePayload.breakdown,
+        explanation: buildExplainabilityText(course, scorePayload),
         created_at: new Date().toISOString()
       };
     })
@@ -249,7 +341,7 @@ app.post("/api/questionnaire", auth, (req, res) => {
   db.questionnaires.push(questionnaire);
 
   if (completed) {
-    const recs = buildRecommendations(req.user.id, questionnaire);
+    const recs = buildRecommendations(req.user.id, questionnaire, db);
     db.recommendations = db.recommendations.filter((r) => r.user_id !== req.user.id);
     db.recommendations.push(...recs);
   }
@@ -272,7 +364,7 @@ app.put("/api/questionnaire/:id", auth, (req, res) => {
   };
 
   if (db.questionnaires[idx].completed) {
-    const recs = buildRecommendations(req.user.id, db.questionnaires[idx]);
+    const recs = buildRecommendations(req.user.id, db.questionnaires[idx], db);
     db.recommendations = db.recommendations.filter((r) => r.user_id !== req.user.id);
     db.recommendations.push(...recs);
   }
@@ -321,6 +413,7 @@ app.get("/api/recommendations", auth, (req, res) => {
       return {
         ...r,
         course,
+        score_breakdown: r.score_breakdown,
         seats_left: course ? seatsLeft(course) : 0
       };
     });
@@ -339,12 +432,7 @@ app.get("/api/recommendations/:id/explain", auth, (req, res) => {
     course,
     match_score: rec.match_score,
     explanation: rec.explanation,
-    breakdown: {
-      interestAlignment: Math.min(rec.match_score + 2, 99),
-      skillCompatibility: Math.max(rec.match_score - 8, 60),
-      careerRelevance: Math.max(rec.match_score - 5, 65),
-      workloadFit: Math.max(rec.match_score - 14, 55)
-    }
+    breakdown: rec.score_breakdown || buildScoreBreakdown(course, null, db).breakdown
   });
 });
 
