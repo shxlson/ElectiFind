@@ -1,5 +1,27 @@
 import { useState, useEffect, useRef } from "react";
-//comment comment
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+
+async function apiRequest(path, options = {}) {
+  const token = localStorage.getItem("electifind_token");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+  return data;
+}
 // ─── Global Styles ────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
@@ -523,17 +545,38 @@ const LandingPage = ({ setPage }) => {
 
 // ─── Auth Pages ───────────────────────────────────────────────────────────────
 
-const AuthPage = ({ setPage }) => {
+const AuthPage = ({ setPage, onAuthSuccess }) => {
   const [mode, setMode] = useState("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (!email || !pass) { setErr("Please fill in all fields."); return; }
+  const handleSubmit = async () => {
+    if (!email || !pass || (mode === "signup" && !name)) { setErr("Please fill in all fields."); return; }
     if (pass.length < 6) { setErr("Password must be at least 6 characters."); return; }
+    setLoading(true);
     setErr("");
-    setPage("dashboard");
+    try {
+      const payload = mode === "signup"
+        ? { name, email, password: pass }
+        : { email, password: pass };
+      const endpoint = mode === "signup" ? "/api/auth/register" : "/api/auth/login";
+      const data = await apiRequest(endpoint, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      localStorage.setItem("electifind_token", data.token);
+      if (onAuthSuccess) {
+        onAuthSuccess(data.user);
+      }
+      setPage("dashboard");
+    } catch (e) {
+      setErr(e.message || "Unable to authenticate.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -614,7 +657,7 @@ const AuthPage = ({ setPage }) => {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "signup" && (
-              <FloatingInput label="Full Name" placeholder="Sarvagna" type="text" />
+              <FloatingInput label="Full Name" placeholder="Sarvagna" type="text" value={name} onChange={setName} />
             )}
             <FloatingInput label="Email Address" placeholder="you@university.edu" type="email" value={email} onChange={setEmail} />
             <FloatingInput label="Password" placeholder="••••••••" type="password" value={pass} onChange={setPass} />
@@ -631,8 +674,8 @@ const AuthPage = ({ setPage }) => {
             </div>
           )}
 
-          <button className="btn-primary" onClick={handleSubmit} style={{ width: "100%", marginTop: 24, padding: "14px", fontSize: 15 }}>
-            {mode === "login" ? "Sign In →" : "Create Account →"}
+          <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: "100%", marginTop: 24, padding: "14px", fontSize: 15, opacity: loading ? 0.7 : 1 }}>
+            {loading ? "Please wait..." : mode === "login" ? "Sign In →" : "Create Account →"}
           </button>
 
           <div style={{ textAlign: "center", marginTop: 24, color: "var(--text-muted)", fontSize: 13 }}>
@@ -682,9 +725,9 @@ const FloatingInput = ({ label, placeholder, type = "text", value, onChange }) =
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 const courses = [
-  { id: 1, name: "Machine Learning for Engineers", code: "CS601", credits: 4, difficulty: "Intermediate", seats: 12, totalSeats: 40, match: 96, rating: 4.8, instructor: "Dr. Meena Iyer", prereq: ["Data Structures", "Linear Algebra"] },
-  { id: 2, name: "Human-Computer Interaction", code: "CS514", credits: 3, difficulty: "Beginner", seats: 23, totalSeats: 35, match: 88, rating: 4.5, instructor: "Prof. Suresh R.", prereq: ["Basics of Design"] },
-  { id: 3, name: "Blockchain & Distributed Systems", code: "CS622", credits: 4, difficulty: "Advanced", seats: 6, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "OS"] },
+  { id: 1, name: "Natural Language Processing", code: "21CSE356T", credits: 4, difficulty: "Intermediate", seats: 14, totalSeats: 40, match: 96, rating: 4.8, instructor: "Dr. Meena Iyer", prereq: ["Data Structures", "Probability & Statistics"] },
+  { id: 2, name: "Cloud Computing", code: "21CSE362T", credits: 3, difficulty: "Beginner", seats: 20, totalSeats: 35, match: 88, rating: 4.5, instructor: "Prof. Suresh R.", prereq: ["Computer Networks", "Operating Systems"] },
+  { id: 3, name: "Network Security and Cryptography", code: "21CSE358T", credits: 4, difficulty: "Advanced", seats: 8, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "Discrete Mathematics"] },
 ];
 
 const DashboardPage = ({ setPage, setActiveCourse }) => {
@@ -1243,9 +1286,9 @@ const ComparePage = ({ setPage }) => {
 // ─── Community ────────────────────────────────────────────────────────────────
 
 const threads = [
-  { id: 1, author: "Rohan M.", course: "CS601", time: "2h ago", title: "How heavy is the ML course math requirement?", body: "I'm from ECE and worried about the linear algebra. Anyone else from non-CS backgrounds who found it manageable?", upvotes: 34, replies: 12, tags: ["workload", "math"] },
-  { id: 2, author: "Divya S.", course: "CS514", time: "5h ago", title: "HCI project — solo or group?", body: "The project brief says 'team preferred' but doesn't mandate it. Has anyone done it solo and how was the experience?", upvotes: 21, replies: 8, tags: ["project", "hci"] },
-  { id: 3, author: "Kiran T.", course: "CS622", time: "1d ago", title: "Blockchain prereqs — is OS really necessary?", body: "The system says OS is a prereq but I've heard the prof doesn't strictly check it. Can someone confirm?", upvotes: 15, replies: 5, tags: ["prereq", "blockchain"] },
+  { id: 1, author: "Rohan M.", course: "21CSE356T", time: "2h ago", title: "How heavy is the NLP course math requirement?", body: "I'm from ECE and worried about probability and optimization basics. Anyone from non-CS background who found it manageable?", upvotes: 34, replies: 12, tags: ["workload", "math"] },
+  { id: 2, author: "Divya S.", course: "21CSE362T", time: "5h ago", title: "Cloud Computing labs — individual or team?", body: "The lab brief says team is preferred but not mandatory. Has anyone done it solo and how was the load?", upvotes: 21, replies: 8, tags: ["project", "cloud"] },
+  { id: 3, author: "Kiran T.", course: "21CSE358T", time: "1d ago", title: "Security prereqs — how much cryptography depth is expected?", body: "The syllabus lists core cryptography topics. Is prior security coursework enough to handle it comfortably?", upvotes: 15, replies: 5, tags: ["prereq", "security"] },
 ];
 
 const CommunityPage = ({ setPage }) => {
@@ -1265,7 +1308,7 @@ const CommunityPage = ({ setPage }) => {
 
         {/* Filters */}
         <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-          {["All Courses", "CS601 – ML", "CS514 – HCI", "CS622 – Blockchain"].map(f => (
+          {["All Courses", "21CSE356T – NLP", "21CSE362T – Cloud", "21CSE358T – Security"].map(f => (
             <button key={f} className="tag teal" style={{ cursor: "pointer", fontSize: 12, padding: "6px 14px" }}>{f}</button>
           ))}
           <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
@@ -1337,9 +1380,9 @@ const CommunityPanel = () => <CommunityPage setPage={() => {}} />;
 
 const ReviewsPanel = () => {
   const reviews = [
-    { author: "Aditya V.", rating: 5, diff: 4, load: 4, text: "Best elective I've taken. The ML concepts are explained with great intuition and the assignments are genuinely useful for portfolios.", helpful: 24, course: "CS601" },
-    { author: "Sneha P.", rating: 4, diff: 3, load: 3, text: "Really enjoyed the course. The final weeks on deployment were eye-opening. Prof Meena is extremely approachable.", helpful: 18, course: "CS601" },
-    { author: "Dev K.", rating: 5, diff: 5, load: 5, text: "Challenging but rewarding. If you're serious about ML, this is it. Be ready to put in extra hours.", helpful: 31, course: "CS601" },
+    { author: "Aditya V.", rating: 5, diff: 4, load: 4, text: "Best elective I've taken. NLP fundamentals are taught very clearly and the assignments are genuinely portfolio-worthy.", helpful: 24, course: "21CSE356T" },
+    { author: "Sneha P.", rating: 4, diff: 3, load: 3, text: "Really enjoyed the course. The final weeks on deployment and model evaluation were eye-opening.", helpful: 18, course: "21CSE356T" },
+    { author: "Dev K.", rating: 5, diff: 5, load: 5, text: "Challenging but rewarding. If you're serious about language AI, this course is excellent. Be ready to put in extra hours.", helpful: 31, course: "21CSE356T" },
   ];
 
   const dist = [5, 4, 3, 2, 1];
@@ -1408,9 +1451,9 @@ const ReviewsPanel = () => {
 
 const MyElectivesPage = ({ setPage }) => {
   const electives = [
-    { name: "Data Communication & Networking", code: "CS403", credits: 4, status: "Completed", grade: "A", rating: 4, semester: "Sem 5" },
-    { name: "Image Processing & Computer Vision", code: "CS521", credits: 3, status: "Ongoing", grade: "—", rating: null, semester: "Sem 6" },
-    { name: "Cloud Computing Essentials", code: "CS412", credits: 3, status: "Completed", grade: "B+", rating: 3, semester: "Sem 5" },
+    { name: "Data Mining and Analytics", code: "21CSE355T", credits: 4, status: "Completed", grade: "A", rating: 4, semester: "Sem 5" },
+    { name: "Computer Vision", code: "21CSE454T", credits: 3, status: "Ongoing", grade: "—", rating: null, semester: "Sem 6" },
+    { name: "Cloud Computing", code: "21CSE362T", credits: 3, status: "Completed", grade: "B+", rating: 3, semester: "Sem 5" },
   ];
 
   return (
@@ -1459,7 +1502,7 @@ const MyElectivesPage = ({ setPage }) => {
         <div style={{ marginTop: 40 }}>
           <div className="section-label" style={{ marginBottom: 16 }}>RECOMMENDATION HISTORY</div>
           <div className="card" style={{ padding: "0" }}>
-            {[["Sep 2024", "AI matched you with CS601, CS514, CS622 based on Questionnaire v3"], ["Mar 2024", "AI matched you with CS403, CS521, CS412 based on Questionnaire v2"], ["Oct 2023", "Initial recommendations based on Questionnaire v1"]].map(([d, t], i) => (
+            {[["Sep 2024", "AI matched you with 21CSE356T, 21CSE362T, 21CSE358T based on Questionnaire v3"], ["Mar 2024", "AI matched you with 21CSE355T, 21CSE454T, 21CSE362T based on Questionnaire v2"], ["Oct 2023", "Initial recommendations based on Questionnaire v1"]].map(([d, t], i) => (
               <div key={d} style={{ display: "flex", gap: 20, padding: "18px 24px", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--teal)", minWidth: 70 }}>{d}</div>
                 <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t}</div>
@@ -1524,24 +1567,48 @@ const DASHBOARD_PAGES = ["dashboard", "questionnaire", "recommendations", "compa
 export default function App() {
   const [page, setPage] = useState("landing");
   const [activeCourse, setActiveCourse] = useState(null);
+  const [user, setUser] = useState(null);
 
   const isDashboard = DASHBOARD_PAGES.includes(page);
 
+  useEffect(() => {
+    const token = localStorage.getItem("electifind_token");
+    if (!token) return;
+    apiRequest("/api/profile")
+      .then((u) => {
+        setUser(u);
+        if (page === "landing" || page === "login") {
+          setPage("dashboard");
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem("electifind_token");
+      });
+  }, []);
+
+  const setPageGuarded = (nextPage) => {
+    if (DASHBOARD_PAGES.includes(nextPage) && !localStorage.getItem("electifind_token")) {
+      setPage("login");
+      return;
+    }
+    setPage(nextPage);
+  };
+
   const renderPage = () => {
     switch (page) {
-      case "landing": return <LandingPage setPage={setPage} />;
-      case "login": return <AuthPage setPage={setPage} />;
-      case "dashboard": return <DashboardPage setPage={setPage} setActiveCourse={setActiveCourse} />;
-      case "questionnaire": return <QuestionnairePage setPage={setPage} />;
-      case "recommendations": return <RecommendationsPage setPage={setPage} setActiveCourse={setActiveCourse} />;
-      case "compare": return <ComparePage setPage={setPage} />;
-      case "community": return <CommunityPage setPage={setPage} />;
-      case "my-electives": return <MyElectivesPage setPage={setPage} />;
-      case "profile": return <ProfilePage setPage={setPage} />;
-      case "course-detail": return <CourseDetailPage course={activeCourse} setPage={setPage} />;
+      case "landing": return <LandingPage setPage={setPageGuarded} />;
+      case "login": return <AuthPage setPage={setPageGuarded} onAuthSuccess={setUser} />;
+      case "dashboard": return <DashboardPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} />;
+      case "questionnaire": return <QuestionnairePage setPage={setPageGuarded} />;
+      case "recommendations": return <RecommendationsPage setPage={setPageGuarded} setActiveCourse={setActiveCourse} />;
+      case "compare": return <ComparePage setPage={setPageGuarded} />;
+      case "community": return <CommunityPage setPage={setPageGuarded} />;
+      case "my-electives": return <MyElectivesPage setPage={setPageGuarded} />;
+      case "profile": return <ProfilePage setPage={setPageGuarded} />;
+      case "course-detail": return <CourseDetailPage course={activeCourse} setPage={setPageGuarded} />;
       case "ai-insight": return (
         <div>
-          <TopBar title="AI Insights" setPage={setPage} />
+          <TopBar title="AI Insights" setPage={setPageGuarded} />
           <div style={{ padding: "36px 40px" }}>
             <div className="section-label" style={{ marginBottom: 8 }}>EXPLAINABLE AI</div>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, marginBottom: 28 }}>Why We Recommended This</h2>
@@ -1549,7 +1616,7 @@ export default function App() {
           </div>
         </div>
       );
-      default: return <LandingPage setPage={setPage} />;
+      default: return <LandingPage setPage={setPageGuarded} />;
     }
   };
 
@@ -1558,7 +1625,7 @@ export default function App() {
       <style>{GLOBAL_CSS}</style>
       {isDashboard ? (
         <div style={{ display: "flex", minHeight: "100vh" }}>
-          <Sidebar activePage={page} setPage={setPage} />
+          <Sidebar activePage={page} setPage={setPageGuarded} />
           <main style={{ flex: 1, marginLeft: 220, minHeight: "100vh", background: "var(--navy)" }}>
             {renderPage()}
           </main>
