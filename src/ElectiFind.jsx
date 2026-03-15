@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
@@ -1548,55 +1549,186 @@ const MyElectivesPage = ({ setPage }) => {
 
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
-const ProfilePage = ({ setPage }) => (
-  <div>
-    <TopBar title="Profile" setPage={setPage} />
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 40px" }}>
-      <div className="card" style={{ padding: "32px", marginBottom: 24, display: "flex", gap: 24, alignItems: "center" }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: "50%",
-          background: "linear-gradient(135deg, #7c4a1e, #e8913a)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 28, fontWeight: 700
-        }}>SN</div>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Sarvagna</h2>
-          <div style={{ display: "flex", gap: 10 }}>
-            <span className="tag">B.Tech CSE</span>
-            <span className="tag">Semester 6</span>
-            <span className="tag teal">2021-2025</span>
+const ProfilePage = ({ setPage, userData, onUserUpdate }) => {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    roll_no: "",
+    department: "",
+    batch: "",
+    semester: "",
+    advisor: "",
+    interests: ""
+  });
+
+  useEffect(() => {
+    const fallbackInterests = ["Machine Learning", "System Design", "HCI", "Python", "Cloud", "Research", "Open Source"];
+    const interests = Array.isArray(userData?.interests) && userData.interests.length
+      ? userData.interests
+      : fallbackInterests;
+    setForm({
+      name: userData?.name || "",
+      email: userData?.email || "",
+      roll_no: userData?.roll_no || "",
+      department: userData?.department || "Computer Science & Engineering",
+      batch: userData?.batch || "2021-2025",
+      semester: userData?.semester || "Sem 6",
+      advisor: userData?.advisor || "",
+      interests: interests.join(", ")
+    });
+  }, [userData]);
+
+  const updateField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const payload = {
+        name: form.name,
+        roll_no: form.roll_no,
+        department: form.department,
+        batch: form.batch,
+        semester: form.semester,
+        advisor: form.advisor,
+        interests: form.interests
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean)
+      };
+      const updated = await apiRequest("/api/profile", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+      onUserUpdate && onUserUpdate(updated);
+      setEditing(false);
+    } catch (e) {
+      setError(e.message || "Unable to update profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const initials = String(form.name || "SN")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((x) => x[0].toUpperCase())
+    .join("");
+
+  return (
+    <div>
+      <TopBar title="Profile" setPage={setPage} />
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 40px" }}>
+        <div className="card" style={{ padding: "32px", marginBottom: 24, display: "flex", gap: 24, alignItems: "center" }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%",
+            background: "linear-gradient(135deg, #7c4a1e, #e8913a)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 28, fontWeight: 700
+          }}>{initials || "SN"}</div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, marginBottom: 4 }}>{form.name || "Student"}</h2>
+            <div style={{ display: "flex", gap: 10 }}>
+              <span className="tag">{form.department || "Department"}</span>
+              <span className="tag">{form.semester || "Semester"}</span>
+              <span className="tag teal">{form.batch || "Batch"}</span>
+            </div>
           </div>
+          {!editing ? (
+            <button className="btn-ghost" style={{ fontSize: 13 }} onClick={() => setEditing(true)}>Edit Profile</button>
+          ) : (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-ghost" style={{ fontSize: 13 }} onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn-primary" style={{ fontSize: 13 }} onClick={saveProfile} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+            </div>
+          )}
         </div>
-        <button className="btn-ghost" style={{ fontSize: 13 }}>Edit Profile</button>
-      </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-        {[["Full Name", "Sarvagna"], ["Email", "Sarvagna@university.edu"], ["Roll No.", "21CS048"], ["Department", "Computer Science & Engineering"], ["Batch", "2021–2025"], ["Advisor", "Dr. Priya Nair"]].map(([l, v]) => (
-          <div key={l} className="card" style={{ padding: "18px 22px" }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: 6, textTransform: "uppercase" }}>{l}</div>
-            <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500 }}>{v}</div>
+        {error && (
+          <div style={{ marginBottom: 16, padding: "10px 16px", background: "rgba(255,60,60,0.1)", border: "1px solid rgba(255,60,60,0.3)", borderRadius: 8, color: "#ff6464", fontSize: 13 }}>
+            ⚠ {error}
           </div>
-        ))}
-      </div>
+        )}
 
-      <div style={{ marginTop: 24 }}>
-        <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Interests & Preferences</h3>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {["Machine Learning", "System Design", "HCI", "Python", "Cloud", "Research", "Open Source"].map(t => (
-            <span key={t} className="tag teal" style={{ fontSize: 13, padding: "6px 14px" }}>✦ {t}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {[
+            ["Full Name", "name", false],
+            ["Email", "email", true],
+            ["Roll No.", "roll_no", false],
+            ["Department", "department", false],
+            ["Batch", "batch", false],
+            ["Advisor", "advisor", false]
+          ].map(([label, key, readOnly]) => (
+            <div key={label} className="card" style={{ padding: "18px 22px" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: 6, textTransform: "uppercase" }}>{label}</div>
+              {!editing || readOnly ? (
+                <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 500 }}>{form[key] || "—"}</div>
+              ) : (
+                <input
+                  value={form[key]}
+                  onChange={(e) => updateField(key, e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text-primary)", fontSize: 14, outline: "none" }}
+                />
+              )}
+            </div>
           ))}
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Interests & Preferences</h3>
+          {!editing ? (
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {(form.interests.split(",").map((x) => x.trim()).filter(Boolean)).map((t) => (
+                <span key={t} className="tag teal" style={{ fontSize: 13, padding: "6px 14px" }}>✦ {t}</span>
+              ))}
+            </div>
+          ) : (
+            <textarea
+              value={form.interests}
+              onChange={(e) => updateField("interests", e.target.value)}
+              rows={3}
+              style={{ width: "100%", padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-primary)", fontSize: 14, outline: "none", resize: "vertical" }}
+            />
+          )}
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── App Shell ────────────────────────────────────────────────────────────────
 
 const DASHBOARD_PAGES = ["dashboard", "questionnaire", "recommendations", "compare", "community", "my-electives", "profile", "course-detail", "ai-insight"];
 
+const PAGE_TO_PATH = {
+  landing: "/",
+  login: "/login",
+  dashboard: "/dashboard",
+  questionnaire: "/questionnaire",
+  recommendations: "/recommendations",
+  compare: "/compare",
+  community: "/community",
+  "my-electives": "/my-electives",
+  profile: "/profile",
+  "course-detail": "/course-detail",
+  "ai-insight": "/ai-insight"
+};
+
+function pageFromPath(pathname) {
+  const entry = Object.entries(PAGE_TO_PATH).find(([, path]) => path === pathname);
+  return entry ? entry[0] : "landing";
+}
+
 export default function App() {
-  const [page, setPage] = useState("landing");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const page = pageFromPath(location.pathname);
   const [activeCourse, setActiveCourse] = useState(null);
   const [user, setUser] = useState(null);
   const [dashboardCourses, setDashboardCourses] = useState(courses);
@@ -1606,6 +1738,10 @@ export default function App() {
   const [loadingData, setLoadingData] = useState(false);
 
   const isDashboard = DASHBOARD_PAGES.includes(page);
+
+  const setPage = (nextPage) => {
+    navigate(PAGE_TO_PATH[nextPage] || PAGE_TO_PATH.landing);
+  };
 
   const loadDashboardBundle = async () => {
     if (!localStorage.getItem("electifind_token")) return;
@@ -1655,6 +1791,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (DASHBOARD_PAGES.includes(page) && !localStorage.getItem("electifind_token")) {
+      navigate(PAGE_TO_PATH.login, { replace: true });
+    }
+  }, [page, navigate]);
+
+  useEffect(() => {
     if (!localStorage.getItem("electifind_token")) return;
     if (["dashboard", "recommendations", "compare"].includes(page)) {
       loadDashboardBundle();
@@ -1663,10 +1805,10 @@ export default function App() {
 
   const setPageGuarded = (nextPage) => {
     if (DASHBOARD_PAGES.includes(nextPage) && !localStorage.getItem("electifind_token")) {
-      setPage("login");
+      navigate(PAGE_TO_PATH.login);
       return;
     }
-    setPage(nextPage);
+    navigate(PAGE_TO_PATH[nextPage] || PAGE_TO_PATH.landing);
   };
 
   const renderPage = () => {
@@ -1679,7 +1821,7 @@ export default function App() {
       case "compare": return <ComparePage setPage={setPageGuarded} coursesData={compareCourses} loading={loadingData} />;
       case "community": return <CommunityPage setPage={setPageGuarded} />;
       case "my-electives": return <MyElectivesPage setPage={setPageGuarded} />;
-      case "profile": return <ProfilePage setPage={setPageGuarded} />;
+      case "profile": return <ProfilePage setPage={setPageGuarded} userData={user} onUserUpdate={setUser} />;
       case "course-detail": return <CourseDetailPage course={activeCourse} setPage={setPageGuarded} />;
       case "ai-insight": return (
         <div>
