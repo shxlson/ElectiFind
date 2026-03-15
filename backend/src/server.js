@@ -648,12 +648,18 @@ app.get("/api/dashboard", auth, (req, res) => {
     ? Math.round(mapped.reduce((acc, x) => acc + x.match, 0) / mapped.length)
     : 0;
 
+  const userEnrollments = db.enrollments.filter((e) => e.user_id === req.user.id);
+  const creditsTaken = userEnrollments.reduce((sum, enrollment) => {
+    const course = COURSES.find((c) => c.id === enrollment.course_id || c.code === enrollment.course_id);
+    return sum + Number(course?.credits || 0);
+  }, 0);
+
   return res.json({
     stats: {
       recommended: mapped.length,
       avgSeats,
       interestMatch: `${avgMatch}%`,
-      creditsTaken: 18
+      creditsTaken
     },
     recommendations: mapped
   });

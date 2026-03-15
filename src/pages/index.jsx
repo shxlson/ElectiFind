@@ -278,7 +278,17 @@ const NAV_ITEMS = [
   { id: "profile", label: "Profile", icon: "◉" },
 ];
 
-const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose }) => (
+function getUserInitials(name) {
+  const tokens = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!tokens.length) return "SN";
+  if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+  return `${tokens[0][0]}${tokens[tokens.length - 1][0]}`.toUpperCase();
+}
+
+const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose, userName = "", userDepartment = "" }) => (
   <aside style={{
     width: 220, minHeight: "100vh", background: "var(--navy-80)",
     borderRight: "1px solid var(--border)", padding: "28px 0",
@@ -328,10 +338,10 @@ const Sidebar = ({ activePage, setPage, isMobile = false, isOpen = true, onClose
           background: "linear-gradient(135deg, #7c4a1e, #e8913a)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 13, fontWeight: 600
-        }}>SN</div>
+        }}>{getUserInitials(userName)}</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>Sarvagna</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>CSE</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{userName || "Student"}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{userDepartment || "Department not set"}</div>
         </div>
       </div>
     </div>
@@ -342,10 +352,13 @@ const TopBar = ({
   title,
   setPage,
   onLogout,
+  userName = "",
+  userDepartment = "",
   showMenuButton = false,
   onToggleMenu
 }) => {
   const [openMenu, setOpenMenu] = useState(false);
+  const avatarLabel = getUserInitials(userName);
 
   return (
     <div style={{
@@ -389,7 +402,7 @@ const TopBar = ({
             fontWeight: 600,
             color: "var(--text-primary)"
           }}
-        >SN</button>
+        >{avatarLabel}</button>
         {openMenu && (
           <div style={{
             position: "absolute",
@@ -403,6 +416,10 @@ const TopBar = ({
             padding: 8,
             zIndex: 120
           }}>
+            <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--border)", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{userName || "Student"}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{userDepartment || "Department not set"}</div>
+            </div>
             <button
               onClick={() => {
                 setOpenMenu(false);
@@ -838,7 +855,7 @@ const courses = [
   { id: 3, name: "Network Security and Cryptography", code: "21CSE358T", credits: 4, difficulty: "Advanced", seats: 8, totalSeats: 30, match: 81, rating: 4.2, instructor: "Dr. Vikram N.", prereq: ["Computer Networks", "Discrete Mathematics"] },
 ];
 
-const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsData = null, loading = false, topBarProps = {}, onAddCompare, userName = "Student", questionnaireStatus = null }) => {
+const DashboardPage = ({ setPage, setActiveCourse, coursesData = [], statsData = null, loading = false, topBarProps = {}, onAddCompare, userName = "Student", questionnaireStatus = null }) => {
   const totalQuestions = 5;
   const completed = Boolean(questionnaireStatus?.completed);
   const rawStep = Number(questionnaireStatus?.step || 0);
@@ -853,9 +870,9 @@ const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsD
 
   const stats = [
     { label: "Recommended", value: String(statsData?.recommended ?? coursesData.length), sub: "Electives", icon: "◈" },
-    { label: "Seats Remaining", value: `Avg ${statsData?.avgSeats ?? "13.7"}`, sub: "Across matches", icon: "⊡" },
-    { label: "Interest Match", value: String(statsData?.interestMatch ?? "88%"), sub: "Avg score", icon: "✦" },
-    { label: "Credits Taken", value: String(statsData?.creditsTaken ?? "18"), sub: "Overall", icon: "⊞" },
+    { label: "Seats Remaining", value: `Avg ${statsData?.avgSeats ?? "0.0"}`, sub: "Across matches", icon: "⊡" },
+    { label: "Interest Match", value: String(statsData?.interestMatch ?? "0%"), sub: "Avg score", icon: "✦" },
+    { label: "Credits Taken", value: String(statsData?.creditsTaken ?? "0"), sub: "Overall", icon: "⊞" },
   ];
 
   return (
@@ -911,6 +928,11 @@ const DashboardPage = ({ setPage, setActiveCourse, coursesData = courses, statsD
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading recommendations...</div>}
+            {!loading && !coursesData.length && (
+              <div className="card" style={{ padding: "24px", color: "var(--text-secondary)", fontSize: 14 }}>
+                No recommendations yet. Complete the questionnaire to generate your top matches.
+              </div>
+            )}
             {!loading && coursesData.map((c, idx) => (
               <CourseCard key={c.id} course={c} idx={idx} onView={() => { setActiveCourse(c); setPage("course-detail"); }} onCompare={() => { onAddCompare && onAddCompare(c); setPage("compare"); }} />
             ))}
@@ -1190,8 +1212,8 @@ const QuestionnairePage = ({ setPage, topBarProps = {}, recommendationHistory = 
 
 // ─── Recommendations ──────────────────────────────────────────────────────────
 
-const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = courses, loading = false, topBarProps = {}, onAddCompare }) => {
-  const courseList = recommendationsData.length ? recommendationsData : courses;
+const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = [], loading = false, topBarProps = {}, onAddCompare }) => {
+  const courseList = recommendationsData;
   return (
     <div>
     <TopBar title="Your Recommendations" setPage={setPage} {...topBarProps} />
@@ -1211,6 +1233,11 @@ const RecommendationsPage = ({ setPage, setActiveCourse, recommendationsData = c
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {loading && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading AI recommendations...</div>}
+        {!loading && !courseList.length && (
+          <div className="card" style={{ padding: "24px", color: "var(--text-secondary)", fontSize: 14 }}>
+            No recommendations available yet. Fill out the questionnaire and submit it to generate personalized results.
+          </div>
+        )}
         {!loading && courseList.map((c, i) => (
           <div key={c.id} className="card" style={{ padding: "28px 28px", position: "relative", overflow: "hidden" }}>
             {i === 0 && (

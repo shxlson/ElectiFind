@@ -47,8 +47,8 @@ export default function App() {
   const page = pageFromPath(location.pathname);
   const [activeCourse, setActiveCourse] = useState(null);
   const [user, setUser] = useState(null);
-  const [dashboardCourses, setDashboardCourses] = useState(courses);
-  const [recommendationCourses, setRecommendationCourses] = useState(courses);
+  const [dashboardCourses, setDashboardCourses] = useState([]);
+  const [recommendationCourses, setRecommendationCourses] = useState([]);
   const [compareCourses, setCompareCourses] = useState(courses);
   const [compareSelection, setCompareSelection] = useState([]);
   const [recommendationHistory, setRecommendationHistory] = useState([]);
@@ -103,14 +103,12 @@ export default function App() {
         .map((c) => normalizeCourseForUi(c))
         .filter(Boolean);
 
-      if (mappedDashboardCourses.length) setDashboardCourses(mappedDashboardCourses);
-      if (mappedRecommendationCourses.length) {
-        setRecommendationCourses(mappedRecommendationCourses);
-        if (!compareSelection.length) {
-          setCompareSelection(mappedRecommendationCourses.slice(0, 3).map((c) => c.code));
-        }
+      setDashboardCourses(mappedDashboardCourses);
+      setRecommendationCourses(mappedRecommendationCourses);
+      if (mappedRecommendationCourses.length && !compareSelection.length) {
+        setCompareSelection(mappedRecommendationCourses.slice(0, 3).map((c) => c.code));
       }
-      if (mappedCompareCourses.length) setCompareCourses(mappedCompareCourses);
+      setCompareCourses(mappedCompareCourses.length ? mappedCompareCourses : courses.slice(0, 3));
       setRecommendationHistory(Array.isArray(history) ? history : []);
       setDashboardStats(dashboard?.stats || null);
       setQuestionnaireStatus(qStatus || null);
@@ -171,9 +169,17 @@ export default function App() {
   };
 
   const topBarProps = {
+    userName: user?.name || "",
+    userDepartment: user?.department || "",
     onLogout: () => {
       localStorage.removeItem("electifind_token");
       setUser(null);
+      setDashboardCourses([]);
+      setRecommendationCourses([]);
+      setDashboardStats(null);
+      setCompareSelection([]);
+      setRecommendationHistory([]);
+      setCompareCourses(courses);
       setQuestionnaireStatus(null);
       setPage("login");
     },
@@ -218,7 +224,15 @@ export default function App() {
               style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 90 }}
             />
           )}
-          <Sidebar activePage={page} setPage={setPageGuarded} isMobile={isMobile} isOpen={isMobile ? sidebarOpen : true} onClose={() => setSidebarOpen(false)} />
+          <Sidebar
+            activePage={page}
+            setPage={setPageGuarded}
+            isMobile={isMobile}
+            isOpen={isMobile ? sidebarOpen : true}
+            onClose={() => setSidebarOpen(false)}
+            userName={user?.name || ""}
+            userDepartment={user?.department || ""}
+          />
           <main style={{ flex: 1, marginLeft: isMobile ? 0 : 220, minHeight: "100vh", background: "var(--navy)" }}>
             {renderPage()}
           </main>
