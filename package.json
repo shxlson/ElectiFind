@@ -9,9 +9,13 @@
     "dev:api": "node backend/src/server.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:api\"",
     "build": "vite build",
+    "start": "node backend/src/server.js",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "vitest run backend/tests/questionnaire-flow.e2e.test.js",
+    "test:cross-browser": "playwright test",
+    "test:perf": "node scripts/perf-smoke.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -24,6 +28,7 @@
     "react-router-dom": "^6.30.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.2.0",
