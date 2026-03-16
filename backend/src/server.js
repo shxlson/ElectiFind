@@ -10,7 +10,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 dotenv.config();
-// Express API app setup and middleware wiring
+// Express API app setup and middleware wiring.
 const app = express();
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
