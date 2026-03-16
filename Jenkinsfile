@@ -12,6 +12,7 @@ pipeline {
     IMAGE_TAG = "${env.BUILD_NUMBER}"
     DOCKER_IMAGE = "${APP_NAME}:${IMAGE_TAG}"
     PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
+    DOCKER_READY = 'false'
   }
 
   stages {
@@ -40,10 +41,24 @@ pipeline {
       }
     }
 
+    stage('Check Docker Daemon') {
+      steps {
+        script {
+          def dockerAvailable = sh(script: 'command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1', returnStatus: true) == 0
+          env.DOCKER_READY = dockerAvailable ? 'true' : 'false'
+          if (dockerAvailable) {
+            echo 'Docker daemon is available. Docker stages will run.'
+          } else {
+            echo 'Docker daemon is not available. Docker stages will be skipped.'
+          }
+        }
+      }
+    }
+
     stage('Build Docker Image') {
       when {
         expression {
-          return sh(script: 'command -v docker >/dev/null 2>&1', returnStatus: true) == 0
+          return env.DOCKER_READY == 'true'
         }
       }
       steps {
@@ -55,7 +70,7 @@ pipeline {
     stage('Push Docker Image (Optional)') {
       when {
         expression {
-          return env.DOCKER_REGISTRY?.trim() && env.DOCKER_CREDENTIALS_ID?.trim()
+          return env.DOCKER_READY == 'true' && env.DOCKER_REGISTRY?.trim() && env.DOCKER_CREDENTIALS_ID?.trim()
         }
       }
       steps {
