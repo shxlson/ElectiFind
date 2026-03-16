@@ -28,10 +28,6 @@ Current deployment status:
 - `backend/src/server.js` API server
 - `backend/tests/` backend tests
 - `electives_dataset.json` courses dataset
-- `docs/FINAL-PRD.md` final PRD
-- `docs/FINAL-REVIEW-1.md` final Review 1 notes
-- `docs/FINAL-REVIEW-2.md` final Review 2 notes
-- `docs/DIAGRAM-PROMPTS.md` Eraser AI prompts for architecture diagrams
 
 ## Local Development
 
@@ -206,9 +202,6 @@ Manual deployment stage (Render webhook):
 2. In Bitbucket Pipelines, run custom pipeline `deploy-render`.
 3. The pipeline sends a POST request to Render deploy hook and fails if hook is missing.
 
-## Documentation for Review
+## Documentation Note
 
-- Product requirements: `docs/FINAL-PRD.md`
-- Review 1 final notes: `docs/FINAL-REVIEW-1.md`
-- Review 2 final notes: `docs/FINAL-REVIEW-2.md`
-- Diagram prompts (system + cloud): `docs/DIAGRAM-PROMPTS.md`
+Review/PRD/diagram draft documents are intentionally kept local and are not tracked in this repository.
