@@ -192,7 +192,9 @@ Required secret env var:
 
 - `JWT_SECRET`
 
-## CI
+## CI/CD
+
+### Bitbucket Pipelines
 
 `bitbucket-pipelines.yml` runs install, tests, and frontend build on every push.
 
@@ -201,6 +203,25 @@ Manual deployment stage (Render webhook):
 1. Add `RENDER_DEPLOY_HOOK_URL` as a secured repository variable.
 2. In Bitbucket Pipelines, run custom pipeline `deploy-render`.
 3. The pipeline sends a POST request to Render deploy hook and fails if hook is missing.
+
+### Jenkins
+
+This repository includes a declarative pipeline at `Jenkinsfile` with these stages:
+
+1. Checkout
+2. Install dependencies (`npm ci`)
+3. Test suite (`npm run test`)
+4. Frontend build (`npm run build`)
+5. Docker image build (`docker build`)
+6. Optional docker push (when `DOCKER_REGISTRY` and `DOCKER_CREDENTIALS_ID` are configured)
+7. Optional deploy hook trigger (when `DEPLOY_HOOK_URL` is configured)
+
+Recommended Jenkins configuration:
+
+- Jenkins agent with Node.js and Docker installed
+- Pipeline from SCM pointing to this repo
+- Optional credentials for container registry (`DOCKER_CREDENTIALS_ID`)
+- Optional environment variable: `DEPLOY_HOOK_URL`
 
 ## Documentation Note
 
