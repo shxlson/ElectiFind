@@ -8,12 +8,19 @@ ElectiFind is a full-stack elective recommendation platform with:
 - seat-aware ranking
 - comparison, community, and electives tracking pages
 
+Current deployment status:
+
+- Azure App Service is live
+- Render deployment config is also available
+
 ## Tech Stack
 
 - Frontend: React + Vite + React Router
 - Backend: Node.js + Express
+- Security: Helmet + CORS allowlist + rate limiting
 - Persistence: JSON data store (`backend/data/db.json`) and dataset file (`electives_dataset.json`)
 - Testing: Vitest + Supertest + Testing Library
+- Cloud: Azure App Service (active), Render (supported)
 
 ## Project Structure
 
@@ -21,6 +28,10 @@ ElectiFind is a full-stack elective recommendation platform with:
 - `backend/src/server.js` API server
 - `backend/tests/` backend tests
 - `electives_dataset.json` courses dataset
+- `docs/FINAL-PRD.md` final PRD
+- `docs/FINAL-REVIEW-1.md` final Review 1 notes
+- `docs/FINAL-REVIEW-2.md` final Review 2 notes
+- `docs/DIAGRAM-PROMPTS.md` Eraser AI prompts for architecture diagrams
 
 ## Local Development
 
@@ -73,6 +84,12 @@ The backend serves API routes under `/api/*` and also serves the built frontend 
 - `MLFLOW_EXPERIMENT_ID` (optional, default `0`)
 - `RENDER_DEPLOY_HOOK_URL` (optional, for Bitbucket manual deploy pipeline)
 
+Security-related environment variables:
+
+- `CORS_ORIGIN` limits browser origins in production
+- `API_RATE_LIMIT_MAX` controls global API request limit window
+- `AUTH_RATE_LIMIT_MAX` controls stricter auth endpoint limits
+
 ## Testing
 
 Unit + integration suite:
@@ -117,6 +134,51 @@ npm run demo:prep
 
 ## Deployment
 
+### Azure App Service (Live)
+
+Active Azure resources:
+
+- Resource Group: `electifind-rg`
+- App Service Plan: `electifind-plan`
+- Web App: `electifind-1773634591`
+- App URL: `https://electifind-1773634591.azurewebsites.net`
+- Health URL: `https://electifind-1773634591.azurewebsites.net/api/health`
+
+Typical Azure deployment flow:
+
+1. Select subscription:
+
+```bash
+az account set --subscription "Azure for Students"
+```
+
+2. Provision resources:
+
+```bash
+az group create --name electifind-rg --location centralindia
+az appservice plan create --name electifind-plan --resource-group electifind-rg --is-linux --sku B1
+az webapp create --resource-group electifind-rg --plan electifind-plan --name electifind-<unique-suffix> --runtime "NODE|20-lts"
+```
+
+3. Configure app settings and startup:
+
+```bash
+az webapp config appsettings set --resource-group electifind-rg --name electifind-<unique-suffix> --settings NODE_ENV=production PORT=8080 JWT_SECRET=<secret> DB_PATH=/home/site/data/db.json FRONTEND_DIST_PATH=dist DATASET_PATH=electives_dataset.json CORS_ORIGIN=https://electifind-<unique-suffix>.azurewebsites.net API_RATE_LIMIT_MAX=300 AUTH_RATE_LIMIT_MAX=20 SCM_DO_BUILD_DURING_DEPLOYMENT=false
+az webapp config set --resource-group electifind-rg --name electifind-<unique-suffix> --startup-file "npm run start"
+```
+
+4. Deploy package:
+
+```bash
+az webapp deploy --resource-group electifind-rg --name electifind-<unique-suffix> --src-path <zip-package> --type zip --restart true --clean true
+```
+
+5. Verify:
+
+```bash
+curl -s https://electifind-<unique-suffix>.azurewebsites.net/api/health
+```
+
 ### Docker
 
 ```bash
@@ -143,3 +205,10 @@ Manual deployment stage (Render webhook):
 1. Add `RENDER_DEPLOY_HOOK_URL` as a secured repository variable.
 2. In Bitbucket Pipelines, run custom pipeline `deploy-render`.
 3. The pipeline sends a POST request to Render deploy hook and fails if hook is missing.
+
+## Documentation for Review
+
+- Product requirements: `docs/FINAL-PRD.md`
+- Review 1 final notes: `docs/FINAL-REVIEW-1.md`
+- Review 2 final notes: `docs/FINAL-REVIEW-2.md`
+- Diagram prompts (system + cloud): `docs/DIAGRAM-PROMPTS.md`
