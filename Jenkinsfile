@@ -7,6 +7,11 @@ pipeline {
     skipDefaultCheckout(true)
   }
 
+  triggers {
+    // Poll SCM for new commits every 2 minutes to auto-start CI.
+    pollSCM('H/2 * * * *')
+  }
+
   environment {
     APP_NAME = 'electifind'
     IMAGE_TAG = "${env.BUILD_NUMBER}"
