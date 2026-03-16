@@ -9,6 +9,7 @@ pipeline {
 
   triggers {
     // Poll SCM for new commits at the fastest native Jenkins interval (every minute).
+    // This keeps CI auto-checking the repository for changes.
     pollSCM('* * * * *')
   }
 
