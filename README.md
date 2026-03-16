@@ -66,8 +66,12 @@ The backend serves API routes under `/api/*` and also serves the built frontend 
 - `DB_PATH` (default: `backend/data/db.json`)
 - `DATASET_PATH` (default: `electives_dataset.json`)
 - `FRONTEND_DIST_PATH` (default: `dist`)
+- `CORS_ORIGIN` (optional comma-separated allowlist, e.g. `https://electifind.app`)
+- `API_RATE_LIMIT_MAX` (optional, default `300` per 15 minutes)
+- `AUTH_RATE_LIMIT_MAX` (optional, default `20` per 15 minutes)
 - `MLFLOW_TRACKING_URI` (optional)
 - `MLFLOW_EXPERIMENT_ID` (optional, default `0`)
+- `RENDER_DEPLOY_HOOK_URL` (optional, for Bitbucket manual deploy pipeline)
 
 ## Testing
 
@@ -133,3 +137,9 @@ Required secret env var:
 ## CI
 
 `bitbucket-pipelines.yml` runs install, tests, and frontend build on every push.
+
+Manual deployment stage (Render webhook):
+
+1. Add `RENDER_DEPLOY_HOOK_URL` as a secured repository variable.
+2. In Bitbucket Pipelines, run custom pipeline `deploy-render`.
+3. The pipeline sends a POST request to Render deploy hook and fails if hook is missing.

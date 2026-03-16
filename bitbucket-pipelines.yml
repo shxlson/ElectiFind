@@ -16,3 +16,12 @@ pipelines:
         script:
           - npm ci
           - npm run build
+
+  custom:
+    deploy-render:
+      - step:
+          name: Deploy to Render (manual)
+          image: curlimages/curl:8.12.1
+          script:
+            - test -n "$RENDER_DEPLOY_HOOK_URL" || (echo "RENDER_DEPLOY_HOOK_URL is required" && exit 1)
+            - curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
