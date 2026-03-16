@@ -8,8 +8,8 @@ pipeline {
   }
 
   triggers {
-    // Poll SCM for new commits every 2 minutes to auto-start CI.
-    pollSCM('H/2 * * * *')
+    // Poll SCM for new commits at the fastest native Jenkins interval (every minute).
+    pollSCM('* * * * *')
   }
 
   environment {
