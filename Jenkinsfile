@@ -4,12 +4,14 @@ pipeline {
   options {
     timestamps()
     disableConcurrentBuilds()
+    skipDefaultCheckout(true)
   }
 
   environment {
     APP_NAME = 'electifind'
     IMAGE_TAG = "${env.BUILD_NUMBER}"
     DOCKER_IMAGE = "${APP_NAME}:${IMAGE_TAG}"
+    PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
   }
 
   stages {
@@ -21,6 +23,7 @@ pipeline {
 
     stage('Install Dependencies') {
       steps {
+        sh 'node -v && npm -v'
         sh 'npm ci'
       }
     }
@@ -38,6 +41,11 @@ pipeline {
     }
 
     stage('Build Docker Image') {
+      when {
+        expression {
+          return sh(script: 'command -v docker >/dev/null 2>&1', returnStatus: true) == 0
+        }
+      }
       steps {
         sh 'docker --version'
         sh 'docker build -t "$DOCKER_IMAGE" .'
@@ -76,7 +84,6 @@ pipeline {
   post {
     always {
       archiveArtifacts artifacts: 'dist/**', allowEmptyArchive: true
-      junit testResults: '**/junit*.xml', allowEmptyResults: true
     }
     success {
       echo 'Jenkins pipeline completed successfully.'
